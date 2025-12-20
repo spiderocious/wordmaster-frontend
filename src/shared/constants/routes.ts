@@ -46,10 +46,7 @@ function route<T extends Record<string, RouteConfig>>(
 export const ROUTES = {
   ROOT: { absPath: '/', relativePath: '/' },
   HOME: route('home'),
-  // Add more routes here as your application grows
-  // ABOUT: route('about'),
-  // DASHBOARD: route('dashboard', {
-  //   OVERVIEW: route('overview'),
-  //   SETTINGS: route('settings'),
-  // }),
+  howToPlay: route('how-to-play'),
+  game: route('game'),
+
 } as const;

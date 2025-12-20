@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { FaPlay, FaUserCircle, FaQuestionCircle, FaUsers, FaTrophy } from '@icons';
-import { ROUTES } from '@shared/routes';
+import { ROUTES } from '@shared/constants/routes';
 import { Button, Logo, Heading, Text } from '@ui/components';
 import { HeroIllustration } from './parts/hero-illustration';
 
@@ -16,23 +16,19 @@ export function EntrypointScreen() {
   const navigate = useNavigate();
 
   function handlePlayAsGuest() {
-    setTimeout(() => {
-      navigate(ROUTES.game);
-    }, 800);
+    navigate(ROUTES.howToPlay.absPath);
   }
 
   function handlePlayGuestMultiplayer() {
-    setTimeout(() => {
-      navigate(ROUTES.multiplayer);
-    }, 800);
+    //navigate(ROUTES.multiplayer.absPath);
   }
 
   function handleSignIn() {
-    navigate(ROUTES.auth);
+    //navigate(ROUTES.auth.absPath);
   }
 
   function handleHowToPlay() {
-    navigate(ROUTES.howToPlay);
+    navigate(ROUTES.howToPlay.absPath);
   }
 
   return (

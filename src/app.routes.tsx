@@ -1,6 +1,7 @@
 import { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
 import { homeRoutes } from '@features/home/home.routes';
+import { howToPlayRoutes } from '@features/how-to-play/how-to-play.routes';
 import { AppEntrypoint } from './app.entrypoint';
 import { ROUTES } from '@shared/constants/routes';
 
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
         Component: EntrypointScreen,
       },
       homeRoutes,
+      howToPlayRoutes,
     ],
   },
 ];

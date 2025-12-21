@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Confetti from 'react-confetti';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import Confetti from "react-confetti";
 import {
   FiShuffle,
   FaKeyboard,
@@ -9,7 +9,6 @@ import {
   FaTrophy,
   FaUser,
   FaPaw,
-  FaMapMarkerAlt,
   FaBuilding,
   FaMobileAlt,
   FaBook,
@@ -20,10 +19,10 @@ import {
   FaDollarSign,
   FaVirus,
   FaUtensils,
-  FaLanguage
-} from '@icons';
-import { ROUTES } from '@shared/constants/routes';
-import { Button, Heading, Text } from '@ui/components';
+  FaLanguage,
+} from "@icons";
+import { ROUTES } from "@shared/constants/routes";
+import { Button, Heading, Text } from "@ui/components";
 
 export function HowToPlayScreen() {
   const navigate = useNavigate();
@@ -46,17 +45,17 @@ export function HowToPlayScreen() {
   }, []);
 
   function handleStart() {
-    //navigate(ROUTES.game.absPath);
+    navigate(ROUTES.game.start.absPath);
   }
 
   function handleSkip() {
-    navigate(ROUTES.game.absPath);
+    navigate(ROUTES.game.start.absPath);
   }
 
-  const progress = ((15 - countdown) / 5) * 100;
+  const progress = ((15 - countdown) / 15) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -68,142 +67,131 @@ export function HowToPlayScreen() {
         />
       )}
 
-      {/* Header */}
-      <motion.header
-        className="p-6 relative z-10"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <Heading level={2} className="text-center text-gray-900">
-          How to Play
-        </Heading>
-      </motion.header>
-
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
+      <main className="flex-1 flex items-center justify-center px-3 py-4 relative z-10 overflow-y-auto">
         <div className="max-w-2xl w-full">
-          {/* Countdown Circle */}
-          <motion.div
-            className="flex flex-col items-center mb-12"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="relative w-32 h-32 mb-4">
+          <div className="fixed top-4 right-4 z-20">
+            <div className="relative w-16 h-16">
               <svg className="w-full h-full transform -rotate-90">
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
+                  cx="32"
+                  cy="32"
+                  r="28"
                   stroke="#E5E7EB"
-                  strokeWidth="8"
+                  strokeWidth="4"
                   fill="none"
                 />
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
+                  cx="32"
+                  cy="32"
+                  r="28"
                   stroke="#1371ec"
-                  strokeWidth="8"
+                  strokeWidth="4"
                   fill="none"
-                  strokeDasharray={`${2 * Math.PI * 56}`}
-                  strokeDashoffset={`${2 * Math.PI * 56 * (1 - progress / 100)}`}
+                  strokeDasharray={`${2 * Math.PI * 28}`}
+                  strokeDashoffset={`${
+                    2 * Math.PI * 28 * (1 - progress / 100)
+                  }`}
                   className="transition-all duration-1000 ease-linear"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-5xl font-bold text-primary">{countdown}</span>
+                <span className="text-xl font-bold text-primary">
+                  {countdown}
+                </span>
               </div>
-            </div>
-            <Text className="text-gray-600">Starting in {countdown}...</Text>
-          </motion.div>
+          </div>
+          </div>
 
           {/* Get Ready Section */}
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-4"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Heading level={1} className="mb-3">
-              Get Ready!
+            <Heading level={2} className="mb-1 text-xl">
+              Instructions
             </Heading>
-            <Text className="text-gray-600">Here's how it works</Text>
+            <Text className="text-gray-600 text-sm">Here's how it works</Text>
           </motion.div>
 
           {/* Instructions */}
           <motion.div
-            className="space-y-4 mb-12"
+            className="space-y-2 mb-4"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
             {/* Step 1 */}
             <motion.div
-              className="bg-white p-6 shadow-md flex items-start gap-4"
+              className="bg-white p-3 shadow-md flex items-center gap-2"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-10 h-10 bg-primary text-white flex items-center justify-center font-bold text-lg">
+              <div className="flex-shrink-0 w-6 h-6 bg-primary text-white flex items-center justify-center font-bold text-xs">
                 1
               </div>
-              <div className="flex-shrink-0 text-primary text-3xl">
+              <div className="flex-shrink-0 text-primary text-lg">
                 <FiShuffle />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">Random Letter</h3>
-                <Text className="text-gray-600">You'll get a random letter for each round</Text>
+                <h3 className="font-semibold text-sm text-gray-900">
+                  Random Letter
+                </h3>
               </div>
             </motion.div>
 
             {/* Step 2 */}
             <motion.div
-              className="bg-white p-6 shadow-md flex items-start gap-4"
+              className="bg-white p-3 shadow-md flex items-center gap-2"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-10 h-10 bg-purple-600 text-white flex items-center justify-center font-bold text-lg">
+              <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
                 2
               </div>
-              <div className="flex-shrink-0 text-purple-600 text-3xl">
+              <div className="flex-shrink-0 text-purple-600 text-lg">
                 <FaKeyboard />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">Category Answer</h3>
-                <Text className="text-gray-600">Type a word that fits the category</Text>
+                <h3 className="font-semibold text-sm text-gray-900">
+                  Type an Answer
+                </h3>
               </div>
             </motion.div>
 
             {/* Step 3 */}
             <motion.div
-              className="bg-white p-6 shadow-md flex items-start gap-4"
+              className="bg-white p-3 shadow-md flex items-center gap-2"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-10 h-10 bg-orange-600 text-white flex items-center justify-center font-bold text-lg">
+              <div className="flex-shrink-0 w-6 h-6 bg-orange-600 text-white flex items-center justify-center font-bold text-xs">
                 3
               </div>
-              <div className="flex-shrink-0 text-orange-600 text-3xl">
+              <div className="flex-shrink-0 text-orange-600 text-lg">
                 <FaClock />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">Beat the Clock</h3>
-                <Text className="text-gray-600">You have 30 seconds to answer</Text>
+                <h3 className="font-semibold text-sm text-gray-900">
+                  Beat 30 Seconds
+                </h3>
               </div>
             </motion.div>
 
             {/* Step 4 */}
             <motion.div
-              className="bg-white p-6 shadow-md flex items-start gap-4"
+              className="bg-white p-3 shadow-md flex items-center gap-2"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-10 h-10 bg-green-600 text-white flex items-center justify-center font-bold text-lg">
+              <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white flex items-center justify-center font-bold text-xs">
                 4
               </div>
-              <div className="flex-shrink-0 text-green-600 text-3xl">
+              <div className="flex-shrink-0 text-green-600 text-lg">
                 <FaTrophy />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg text-gray-900 mb-1">Earn Points</h3>
-                <Text className="text-gray-600">Answer fast to climb the leaderboard</Text>
+                <h3 className="font-semibold text-sm text-gray-900">
+                  Earn Points
+                </h3>
               </div>
             </motion.div>
           </motion.div>
@@ -214,61 +202,61 @@ export function HowToPlayScreen() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
           >
-            <Text className="text-gray-500 text-sm uppercase tracking-wide mb-4 text-center font-semibold">
+            <Text className="text-gray-500 text-xs uppercase tracking-wide mb-2 text-center font-semibold">
               Categories You'll See
             </Text>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaPaw className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Animal</span>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaPaw className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Animal</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaMobileAlt className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">App</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaMobileAlt className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">App</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaBook className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Bible</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaBook className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Bible</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaCar className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Car</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaCar className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Car</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaCity className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">City</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaCity className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">City</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaPalette className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Color</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaPalette className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Color</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaBuilding className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Company</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaBuilding className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Company</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaGlobe className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Country</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaGlobe className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Country</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaDollarSign className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Currency</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaDollarSign className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Currency</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaVirus className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Disease</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaVirus className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Disease</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaUtensils className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Food</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaUtensils className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Food</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaLanguage className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Language</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaLanguage className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Language</span>
               </div>
-              <div className="bg-white px-4 py-3 flex items-center gap-2 shadow-sm">
-                <FaUser className="text-gray-700 text-xl" />
-                <span className="font-medium text-gray-800">Name</span>
+              <div className="bg-white px-2 py-2 flex items-center gap-1 shadow-sm">
+                <FaUser className="text-gray-700 text-sm" />
+                <span className="font-medium text-gray-800 text-xs">Name</span>
               </div>
             </div>
           </motion.div>
@@ -280,7 +268,12 @@ export function HowToPlayScreen() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
-            <Button onClick={handleSkip} variant="primary" size="large" className="min-w-[200px]" fullWidth>
+            <Button
+              onClick={handleSkip}
+              variant="primary"
+              size="medium"
+              className="w-full"
+            >
               Skip & Start Now
             </Button>
           </motion.div>

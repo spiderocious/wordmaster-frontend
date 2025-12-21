@@ -47,6 +47,14 @@ export const ROUTES = {
   ROOT: { absPath: '/', relativePath: '/' },
   HOME: route('home'),
   howToPlay: route('how-to-play'),
-  game: route('game'),
+  game: route('game', {
+    start: { absPath: '/start', relativePath: 'start' },
+    session: { absPath: '/session/:gameId', relativePath: 'session/:gameId' },
+  }),
 
 } as const;
+
+// Helper to generate session route with gameId
+export function getGameSessionRoute(gameId: string): string {
+  return `/game/session/${gameId}`;
+}

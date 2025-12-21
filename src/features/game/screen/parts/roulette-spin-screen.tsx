@@ -96,7 +96,7 @@ export function RouletteSpinScreen() {
             transition={{ delay: 0.2, type: 'spring', stiffness: 150 }}
             className="mb-2"
           >
-            <h1 className="text-5xl font-black text-white drop-shadow-lg mb-2">
+            <h1 className="text-5xl font-black text-black drop-shadow-lg mb-2">
               Next Letter Is...
             </h1>
             <p className="text-indigo-200 text-sm font-medium">

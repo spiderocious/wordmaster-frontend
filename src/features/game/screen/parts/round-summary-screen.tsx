@@ -56,6 +56,9 @@ export function RoundSummaryScreen() {
   const [error, setError] = useState<string | null>(null);
   const [roundScore, setRoundScore] = useState(0);
 
+  // Get ALL categories for current round (not just answered ones)
+  const categories = currentRound?.categories || [];
+
   // Get answers for current round only
   const roundAnswers = gameContext.answers.filter(
     (answer) => answer.letter.toUpperCase() === selectedLetter.toUpperCase()
@@ -105,9 +108,18 @@ export function RoundSummaryScreen() {
 
   // Calculate stats
   const correctAnswers = validationResults.filter((r) => r.valid).length;
-  const totalAnswers = roundAnswers.length;
-  const avgTimeLeft = roundAnswers.reduce((sum, a) => sum + a.timeLeft, 0) / roundAnswers.length;
-  const avgTimeSeconds = (avgTimeLeft * (currentRound?.timeLimit || 30)).toFixed(1);
+  const totalAnswers = categories.length; // Total categories, not just answered
+
+  // Calculate average time in seconds based on answered categories
+  let avgTimeSeconds = '0.0';
+  if (roundAnswers.length > 0) {
+    const totalTime = roundAnswers.reduce((sum, answer) => {
+      const category = categories.find(c => c.name === answer.category);
+      const categoryTimeLimit = category?.timeLimit || 30;
+      return sum + (answer.timeLeft * categoryTimeLimit);
+    }, 0);
+    avgTimeSeconds = (totalTime / roundAnswers.length).toFixed(1);
+  }
 
   function handleNextRound() {
     // Move to next round or final summary
@@ -155,16 +167,22 @@ export function RoundSummaryScreen() {
               </div>
             </motion.div>
 
-            {/* Answers List */}
+            {/* Answers List - Show ALL categories */}
             <div className="space-y-3 mb-6">
-              {roundAnswers.map((answer, index) => {
+              {categories.map((category, index) => {
+                // Find the answer for this category
+                const answer = roundAnswers.find(
+                  (a) => a.category === category.name
+                );
+
+                // Find the validation result for this category
                 const result = validationResults.find(
-                  (r) => r.category === answer.category
+                  (r) => r.category === category.name
                 );
 
                 return (
                   <motion.div
-                    key={`${answer.category}-${index}`}
+                    key={`${category.name}-${index}`}
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -179,20 +197,24 @@ export function RoundSummaryScreen() {
                     <div className="flex items-center gap-4">
                       {/* Category Icon */}
                       <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl text-gray-700">
-                        {getCategoryIcon(answer.category)}
+                        {getCategoryIcon(category.name)}
                       </div>
 
                       {/* Category & Answer */}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 capitalize">
-                          {answer.category}
+                          {category.displayName}
                         </h3>
                         <p className="text-gray-600">
-                          Answer: <span className="font-semibold">{answer.word}</span>
-                          {' • '}
-                          <span className="text-xs">
-                            {(answer.timeLeft * (currentRound?.timeLimit || 30)).toFixed(1)}s
-                          </span>
+                          Answer: <span className="font-semibold">{answer?.word || 'No answer'}</span>
+                          {answer && (
+                            <>
+                              {' • '}
+                              <span className="text-xs">
+                                {(answer.timeLeft * category.timeLimit).toFixed(1)}s
+                              </span>
+                            </>
+                          )}
                         </p>
                         {result && !result.valid && result.possibleAnswers && (
                           <p className="text-xs text-gray-500 mt-1">

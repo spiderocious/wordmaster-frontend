@@ -19,28 +19,39 @@ export function AnsweringScreen() {
   const currentRoundNumber = gameContext.currentRoundIndex + 1;
   const selectedLetter = currentRound?.letter || 'A';
   const categories = currentRound?.categories || [];
-  const timeLimit = currentRound?.timeLimit || 30;
 
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [answer, setAnswer] = useState('');
   const [categoryAnswers, setCategoryAnswers] = useState<Record<string, string>>({});
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [categoryTimesLeft, setCategoryTimesLeft] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const currentCategory = categories[currentCategoryIndex];
+  const currentTimeLimit = currentCategory?.timeLimit || 30;
+
+  // Initialize timeLeft with the first category's time limit
+  const [timeLeft, setTimeLeft] = useState(currentTimeLimit);
   const circumference = 2 * Math.PI * 45;
-  const strokeDashoffset = circumference - (timeLeft / timeLimit) * circumference;
+  const strokeDashoffset = circumference - (timeLeft / currentTimeLimit) * circumference;
 
   // Get timer color based on time remaining
   const getTimerColor = () => {
-    const percentage = (timeLeft / timeLimit) * 100;
+    const percentage = (timeLeft / currentTimeLimit) * 100;
     if (percentage > 50) return '#3B82F6'; // blue
     if (percentage > 25) return '#F59E0B'; // yellow/orange
     return '#EF4444'; // red
   };
+
+  // Initialize on mount - set up first category
+  useEffect(() => {
+    if (currentCategory) {
+      setTimeLeft(currentCategory.timeLimit);
+      setAnswer(selectedLetter.toUpperCase());
+    }
+  }, []); // Run only once on mount
 
   // Typewriter effect for challenge text
   useEffect(() => {
@@ -66,12 +77,16 @@ export function AnsweringScreen() {
     return () => clearInterval(typingInterval);
   }, [currentCategoryIndex, selectedLetter, currentCategory]);
 
-  // Reset answer when category changes and pre-fill with letter
+  // Reset answer and timer when category changes and pre-fill with letter
   useEffect(() => {
     setAnswer(selectedLetter.toUpperCase());
+    // Reset timer to current category's time limit
+    if (currentCategory) {
+      setTimeLeft(currentCategory.timeLimit);
+    }
     // Auto-focus input after category change
     setTimeout(() => inputRef.current?.focus(), 100);
-  }, [currentCategoryIndex, selectedLetter]);
+  }, [currentCategoryIndex, selectedLetter, currentCategory]);
 
   // Timer countdown
   useEffect(() => {
@@ -88,17 +103,23 @@ export function AnsweringScreen() {
   }, [timeLeft]);
 
   function handleSubmit() {
-    if (!currentCategory || answer.trim().length <= 1) return; // Must have more than just the letter
+    if (!currentCategory) return;
 
     // Extract answer without the pre-filled letter
     const actualAnswer = answer.slice(1).trim();
-    if (!actualAnswer) return;
 
-    // Save answer for current category
-    const fullAnswer = selectedLetter.toUpperCase() + actualAnswer;
+    // Save answer for current category (even if empty)
+    const fullAnswer = actualAnswer ? selectedLetter.toUpperCase() + actualAnswer : '';
     setCategoryAnswers((prev) => ({
       ...prev,
       [currentCategory.name]: fullAnswer,
+    }));
+
+    // Save time left for this category as a decimal (0-1)
+    const timeLeftDecimal = timeLeft / currentTimeLimit;
+    setCategoryTimesLeft((prev) => ({
+      ...prev,
+      [currentCategory.name]: timeLeftDecimal,
     }));
 
     // Move to next category or submit all
@@ -112,30 +133,31 @@ export function AnsweringScreen() {
   function handleSubmitAll() {
     setIsSubmitting(true);
 
-    // Save all answers to context
-    const timeLeftDecimal = timeLeft / timeLimit;
-    Object.entries(categoryAnswers).forEach(([category, word]) => {
-      if (word) {
-        gameContext.addAnswer({
-          letter: selectedLetter,
-          word,
-          category,
-          timeLeft: timeLeftDecimal,
-        });
-      }
-    });
-
-    // Add current answer if exists
+    // Save current answer before submitting all
     const actualAnswer = answer.slice(1).trim();
-    if (actualAnswer && currentCategory) {
-      const fullAnswer = selectedLetter.toUpperCase() + actualAnswer;
+    const fullAnswer = actualAnswer ? selectedLetter.toUpperCase() + actualAnswer : '';
+    const currentTimeLeftDecimal = timeLeft / currentTimeLimit;
+
+    const finalAnswers = { ...categoryAnswers };
+    const finalTimesLeft = { ...categoryTimesLeft };
+
+    if (currentCategory) {
+      finalAnswers[currentCategory.name] = fullAnswer;
+      finalTimesLeft[currentCategory.name] = currentTimeLeftDecimal;
+    }
+
+    // Save ALL categories to context, including unanswered ones (empty string)
+    categories.forEach((category) => {
+      const word = finalAnswers[category.name] || ''; // Empty string if not answered
+      const timeLeftDecimal = finalTimesLeft[category.name] || 0; // 0 if no time tracked
+
       gameContext.addAnswer({
         letter: selectedLetter,
-        word: fullAnswer,
-        category: currentCategory.name,
+        word,
+        category: category.name,
         timeLeft: timeLeftDecimal,
       });
-    }
+    });
 
     // Transition to round summary
     setTimeout(() => {
@@ -345,7 +367,7 @@ export function AnsweringScreen() {
             >
               <Button
                 onClick={handleSubmit}
-                disabled={answer.trim().length <= 1 || isSubmitting}
+                disabled={isSubmitting}
                 variant="primary"
                 size="large"
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-4 rounded-2xl shadow-lg transition-all transform hover:scale-105 active:scale-95"
@@ -362,7 +384,7 @@ export function AnsweringScreen() {
                   >
                     <path d="M5 13l4 4L19 7"></path>
                   </svg>
-                  {currentCategoryIndex < categories.length - 1 ? 'Submit' : 'Submit All'}
+                  {currentCategoryIndex < categories.length - 1 ? 'Submit / Skip' : 'Submit All'}
                 </span>
               </Button>
             </motion.div>

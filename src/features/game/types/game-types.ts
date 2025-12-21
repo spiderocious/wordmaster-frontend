@@ -7,13 +7,13 @@
 export interface Category {
   name: string;
   displayName: string;
+  timeLimit: number;
 }
 
 export interface Round {
   roundNumber: number;
   letter: string;
   categories: Category[];
-  timeLimit: number;
 }
 
 export interface StartGameResponse {

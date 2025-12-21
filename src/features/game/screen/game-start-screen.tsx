@@ -26,6 +26,7 @@ export function GameStartScreen() {
       const response = await gameApi.startSingleGame();
 
       if (response.success && response.data) {
+        gameContext.startNewGame();
         // Store game data in context
         gameContext.setGameId(response.data.gameId);
         gameContext.setTotalRounds(response.data.totalRounds);
@@ -33,7 +34,7 @@ export function GameStartScreen() {
         gameContext.setCreatedAt(response.data.createdAt);
         gameContext.setCurrentRoundIndex(0);
         gameContext.setGameState(GameState.ROUND_START);
-
+        
         // Navigate to game session
         navigate(getGameSessionRoute(response.data.gameId));
       }

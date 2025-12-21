@@ -34,6 +34,8 @@ interface GameContextValue {
 
   currentScore: number;
   setCurrentScore: (score: number) => void;
+  
+  startNewGame: () => void;
 
   clearGame: () => void;
   saveGameToCache: () => void;
@@ -146,8 +148,20 @@ export function GameProvider({ children }: GameProviderProps) {
     }
   }, [gameId, totalRounds, rounds, currentRoundIndex, gameState, answers, createdAt, currentScore]);
 
+  function startNewGame() {
+    setGameIdState(null);
+    setTotalRounds(0);
+    setRounds([]);
+    setCurrentRoundIndex(0);
+    setGameState(GameState.ROUND_START);
+    setAnswers([]);
+    setCreatedAt(null);
+    setCurrentScore(0);
+  }
+
   const value: GameContextValue = {
     gameId,
+    startNewGame,
     setGameId,
     totalRounds,
     setTotalRounds,

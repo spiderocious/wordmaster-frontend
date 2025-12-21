@@ -64,7 +64,7 @@ export function HeroIllustration() {
       {/* Center word "WORDS" with dynamic effects */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="flex gap-3">
-          {centerLetters.map((letter, i) => (
+          {centerLetters.map((_, i) => (
             <motion.div
               key={i}
               className="relative"

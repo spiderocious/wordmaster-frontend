@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Confetti from "react-confetti";
+import { PageTransition } from "@shared/ui/components/page-transition";
 import {
   FiShuffle,
   FaKeyboard,
@@ -55,7 +56,8 @@ export function HowToPlayScreen() {
   const progress = ((15 - countdown) / 15) * 100;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
+    <PageTransition direction="right" className="h-screen">
+      <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
       {showConfetti && (
         <Confetti
           width={window.innerWidth}
@@ -280,5 +282,6 @@ export function HowToPlayScreen() {
         </div>
       </main>
     </div>
+    </PageTransition>
   );
 }

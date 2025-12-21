@@ -7,6 +7,8 @@ import { getGameSessionRoute } from '@shared/constants/routes';
 import { Button, Heading, Text } from '@ui/components';
 import { gameApi } from '../api/game-api';
 import { useGameContext } from '../providers/game-provider';
+import { GameState } from '../constants/game-state';
+import { PageTransition } from '@shared/ui/components/page-transition';
 
 const FLOATING_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
@@ -30,6 +32,7 @@ export function GameStartScreen() {
         gameContext.setRounds(response.data.rounds);
         gameContext.setCreatedAt(response.data.createdAt);
         gameContext.setCurrentRoundIndex(0);
+        gameContext.setGameState(GameState.ROUND_START);
 
         // Navigate to game session
         navigate(getGameSessionRoute(response.data.gameId));
@@ -47,7 +50,8 @@ export function GameStartScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
+    <PageTransition direction="left" className="min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
 
         <Confetti
           width={window.innerWidth}
@@ -255,5 +259,6 @@ export function GameStartScreen() {
         </div>
       </main>
     </div>
+    </PageTransition>
   );
 }

@@ -5,9 +5,11 @@
  */
 
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useGameContext } from '../../providers/game-provider';
 import { GameState } from '../../constants/game-state';
 import Confetti from 'react-confetti';
+import { PageTransition } from '@shared/ui/components/page-transition';
 
 export function RoundStartScreen() {
   const gameContext = useGameContext();
@@ -27,69 +29,94 @@ export function RoundStartScreen() {
   const progressDots = Array.from({ length: totalRounds }, (_, i) => i + 1);
 
   return (
-    <div className="h-screen w-full bg-gradient-to-b from-purple-600 to-purple-800 flex flex-col items-center justify-center px-4 overflow-hidden relative">
-      <Confetti
-        width={window.innerWidth}
-        height={window.innerHeight}
-        numberOfPieces={150}
-        recycle={true}
-        gravity={0.3}
-      />
+    <PageTransition direction="up" className="h-screen w-full">
+      <div className="h-screen w-full bg-gray-50 flex flex-col items-center justify-center px-4 overflow-hidden relative">
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          numberOfPieces={150}
+          recycle={true}
+          gravity={0.3}
+        />
 
-      <div className="text-center z-10">
-        {/* Round indicator */}
-        <div className="mb-6">
-          <p className="text-purple-200 text-sm uppercase tracking-wide mb-2">
-            Round
-          </p>
-          <div className="flex items-baseline justify-center gap-2">
-            <span className="text-6xl font-black text-white">
-              {currentRound}
-            </span>
-            <span className="text-3xl font-bold text-purple-200">
+        <div className="text-center z-10">
+          {/* Round indicator */}
+          <motion.div
+            className="mb-8"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{
+              type: 'spring',
+              stiffness: 200,
+              damping: 10,
+              delay: 0.2,
+            }}
+          >
+            <div className="flex items-baseline justify-center gap-3">
+              <span className="text-6xl font-black text-gray-900">
+                Round
+              </span>
+              <span className="text-6xl font-black text-blue-600">
+                {currentRound}
+              </span>
+            </div>
+            <p className="text-gray-500 text-xl font-medium mt-2">
               of {totalRounds}
-            </span>
-          </div>
-        </div>
-
-        {/* Progress dots */}
-        <div className="flex gap-2 justify-center mb-8">
-          {progressDots.map((round) => (
-            <div
-              key={round}
-              className={`w-2 h-2 rounded-full transition-all ${
-                round < currentRound
-                  ? 'bg-green-400'
-                  : round === currentRound
-                  ? 'bg-white scale-125'
-                  : 'bg-purple-400/40'
-              }`}
-            />
-          ))}
-        </div>
-
-        {/* Motivational text */}
-        <div className="space-y-2">
-          <p className="text-2xl font-bold text-white">
-            YOU'RE DOING GREAT!
-          </p>
-          <p className="text-purple-200 text-sm">
-            Get ready for the next round
-          </p>
-        </div>
-
-        {/* Current score if available */}
-        {gameContext.currentScore !== undefined && gameContext.currentScore > 0 && (
-          <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 inline-block">
-            <p className="text-xs text-purple-200 uppercase tracking-wide">
-              Current Score
             </p>
-            <p className="text-2xl font-bold text-white">
-              {gameContext.currentScore}
-            </p>
-          </div>
-        )}
+          </motion.div>
+
+          {/* Progress dots */}
+          <motion.div
+            className="flex gap-3 justify-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            {progressDots.map((round, index) => (
+              <motion.div
+                key={round}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 15,
+                  delay: 0.5 + index * 0.1,
+                }}
+                className={`w-4 h-4 rounded-full ${
+                  round < currentRound
+                    ? 'bg-blue-600'
+                    : round === currentRound
+                    ? 'bg-blue-600'
+                    : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </motion.div>
+
+          {/* Current score if available */}
+          {gameContext.currentScore !== undefined && gameContext.currentScore > 0 && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                type: 'spring',
+                stiffness: 200,
+                damping: 12,
+                delay: 0.8,
+              }}
+              className="mb-16 bg-white rounded-full shadow-md px-6 py-3 inline-flex items-center gap-2"
+            >
+              <span className="text-blue-600 text-xl">🏆</span>
+              <span className="text-gray-700 font-medium">Score:</span>
+              <span className="text-gray-900 font-bold text-lg">
+                {gameContext.currentScore.toLocaleString()}
+              </span>
+            </motion.div>
+          )}
+
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

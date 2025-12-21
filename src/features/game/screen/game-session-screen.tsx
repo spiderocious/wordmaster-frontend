@@ -11,6 +11,8 @@ import { GameState } from '../constants/game-state';
 import { RoundStartScreen } from './parts/round-start-screen';
 import { RouletteSpinScreen } from './parts/roulette-spin-screen';
 import { LetterRevealScreen } from './parts/letter-reveal-screen';
+import { AnsweringScreen } from './parts/answering-screen';
+import { RoundSummaryScreen } from './parts/round-summary-screen';
 
 export function GameSessionScreen() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -49,8 +51,15 @@ export function GameSessionScreen() {
     case GameState.LETTER_REVEAL:
       return <LetterRevealScreen />;
 
+    case GameState.ANSWERING:
+      return <AnsweringScreen />;
+
+    case GameState.ROUND_SUMMARY:
+      return <RoundSummaryScreen />;
+
     // TODO: Add other states
     default:
-      return <div>Unknown game state</div>;
+      console.log('Unknown game state:', gameContext);
+      return <div>Unknown game state. {gameContext.gameState} </div>;
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { apiClient } from '@shared/api/axios-instance';
-import { StartGameResponse, StartGamePayload, ValidateResponse, Answer } from '../types/game-types';
+import { StartGameResponse, StartGamePayload, ValidateResponse, FinalSummaryResponse, Answer } from '../types/game-types';
 
 export const gameApi = {
   /**
@@ -17,10 +17,18 @@ export const gameApi = {
   },
 
   /**
-   * Validate answers
+   * Validate answers for a round
    */
   async validateAnswers(answers: Answer[]): Promise<ValidateResponse> {
     const response = await apiClient.post<ValidateResponse>('/api/game/validate', answers);
+    return response.data;
+  },
+
+  /**
+   * Get final game summary with all answers
+   */
+  async getFinalSummary(answers: Answer[]): Promise<FinalSummaryResponse> {
+    const response = await apiClient.post<FinalSummaryResponse>('/api/game/submit', answers);
     return response.data;
   },
 };

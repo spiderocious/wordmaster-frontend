@@ -13,6 +13,7 @@ import { RouletteSpinScreen } from './parts/roulette-spin-screen';
 import { LetterRevealScreen } from './parts/letter-reveal-screen';
 import { AnsweringScreen } from './parts/answering-screen';
 import { RoundSummaryScreen } from './parts/round-summary-screen';
+import { FinalSummaryScreen } from './parts/final-summary-screen';
 
 export function GameSessionScreen() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -57,7 +58,9 @@ export function GameSessionScreen() {
     case GameState.ROUND_SUMMARY:
       return <RoundSummaryScreen />;
 
-    // TODO: Add other states
+    case GameState.FINAL_SUMMARY:
+      return <FinalSummaryScreen />;
+
     default:
       console.log('Unknown game state:', gameContext);
       return <div>Unknown game state. {gameContext.gameState} </div>;

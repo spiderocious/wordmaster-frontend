@@ -1,4 +1,6 @@
 import { ReactNode } from 'react';
+import { soundService } from './shared/services/sound-service';
+import { SoundToggleButton } from './shared/ui/components/sound-toggle-button';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -18,8 +20,10 @@ interface AppProviderProps {
  * - FeatureFlagsProvider
  */
 export function AppProvider({ children }: AppProviderProps) {
+  soundService.playButtonClick();
   return (
     <>
+      <SoundToggleButton />
       {/* Add global providers here */}
       {/* Example: */}
       {/* <QueryClientProvider client={queryClient}> */}

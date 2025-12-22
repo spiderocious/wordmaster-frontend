@@ -12,6 +12,7 @@ import { PageTransition } from '@shared/ui/components/page-transition';
 import { gameApi } from '../../api/game-api';
 import { ValidationResult } from '../../types/game-types';
 import { Button } from '@ui/components';
+import { soundService } from '@shared/services/sound-service';
 import {
   FaPaw,
   FaCity,
@@ -90,6 +91,14 @@ export function RoundSummaryScreen() {
             // Update game context score
             gameContext.setCurrentScore(gameContext.currentScore + totalScore);
 
+            // Play appropriate sound based on results
+            const hasCorrectAnswers = response.data.some((r) => r.valid);
+            if (hasCorrectAnswers) {
+              soundService.playSuccess();
+            } else {
+              soundService.playError();
+            }
+
             setIsValidating(false);
           }, 1500);
         } else {
@@ -122,6 +131,8 @@ export function RoundSummaryScreen() {
   }
 
   function handleNextRound() {
+    soundService.playButtonClick();
+
     // Move to next round or final summary
     if (gameContext.currentRoundIndex < gameContext.totalRounds - 1) {
       gameContext.setCurrentRoundIndex(gameContext.currentRoundIndex + 1);
@@ -138,6 +149,7 @@ export function RoundSummaryScreen() {
   return (
     <PageTransition direction="up" className="h-screen">
       <div className="h-screen w-full bg-gray-50 flex flex-col relative overflow-hidden">
+
         {/* Header */}
         <header className="bg-white text-gray-900 px-4 py-4 shadow-md relative z-10">
           <motion.h1

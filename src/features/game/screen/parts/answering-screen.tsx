@@ -12,6 +12,7 @@ import { PageTransition } from '@shared/ui/components/page-transition';
 import { formatCategoryChallenge } from '@shared/utils/format-category-challenge';
 import { FaArrowLeft } from '@icons';
 import { Button } from '@ui/components';
+import { soundService } from '@shared/services/sound-service';
 
 export function AnsweringScreen() {
   const gameContext = useGameContext();
@@ -50,7 +51,9 @@ export function AnsweringScreen() {
     if (currentCategory) {
       setTimeLeft(currentCategory.timeLimit);
       setAnswer(selectedLetter.toUpperCase());
+      soundService.playAnswering();
     }
+    return () => {};
   }, []); // Run only once on mount
 
   // Typewriter effect for challenge text
@@ -88,11 +91,16 @@ export function AnsweringScreen() {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [currentCategoryIndex, selectedLetter, currentCategory]);
 
-  // Timer countdown
+  // Timer countdown with tick sound
   useEffect(() => {
     if (timeLeft <= 0) {
       handleSubmitAll();
       return;
+    }
+
+    // Play tick sound when time is low (last 5 seconds)
+    if (timeLeft <= 5) {
+      soundService.playTick();
     }
 
     const timer = setInterval(() => {
@@ -104,6 +112,8 @@ export function AnsweringScreen() {
 
   function handleSubmit() {
     if (!currentCategory) return;
+
+    soundService.playButtonClick();
 
     // Extract answer without the pre-filled letter
     const actualAnswer = answer.slice(1).trim();
@@ -193,6 +203,7 @@ export function AnsweringScreen() {
   return (
     <PageTransition direction="left" className="h-screen">
       <div className="h-screen w-full bg-gray-50 flex flex-col relative overflow-hidden">
+
         {/* Header */}
         <header className="bg-white text-gray-900 px-4 py-3 flex items-center justify-between shadow-md relative z-10">
           <button

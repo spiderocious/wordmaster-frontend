@@ -10,6 +10,7 @@ import { useGameContext } from '../../providers/game-provider';
 import { GameState } from '../../constants/game-state';
 import Confetti from 'react-confetti';
 import { PageTransition } from '@shared/ui/components/page-transition';
+import { soundService } from '@shared/services/sound-service';
 
 export function LetterRevealScreen() {
   const gameContext = useGameContext();
@@ -17,6 +18,11 @@ export function LetterRevealScreen() {
   // Get the current round's letter
   const currentRound = gameContext.rounds[gameContext.currentRoundIndex];
   const selectedLetter = currentRound?.letter || 'A';
+
+  useEffect(() => {
+    const stopSound = soundService.playLetterReveal();
+    return () => stopSound();
+  }, []);
 
   // Auto-transition to answering state after 3 seconds
   useEffect(() => {
@@ -37,6 +43,7 @@ export function LetterRevealScreen() {
         recycle={true}
         gravity={0.3}
       />
+
 
       <div className="text-center z-10">
         {/* Subtitle */}

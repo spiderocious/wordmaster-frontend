@@ -5,6 +5,8 @@ import { FaPlay, FaUserCircle, FaQuestionCircle, FaUsers, FaTrophy } from '@icon
 import { ROUTES } from '@shared/constants/routes';
 import { Button, Logo, Heading, Text } from '@ui/components';
 import { HeroIllustration } from './parts/hero-illustration';
+import { soundService } from '../../../shared/services/sound-service';
+import { useEffect } from 'react';
 
 /**
  * Entrypoint Screen
@@ -15,8 +17,13 @@ import { HeroIllustration } from './parts/hero-illustration';
 export function EntrypointScreen() {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    soundService.playWelcome();
+  }, []);
+
   function handlePlayAsGuest() {
     navigate(ROUTES.howToPlay.absPath);
+    soundService.playButtonClick();
   }
 
   function handlePlayGuestMultiplayer() {
@@ -175,7 +182,7 @@ export function EntrypointScreen() {
                 className="shadow-2xl"
               >
                 <FaPlay className="text-xl" />
-                Play as Guest
+                Play
               </Button>
             </motion.div>
 
@@ -190,10 +197,10 @@ export function EntrypointScreen() {
                 variant="primary"
                 size="large"
                 fullWidth
-                className="shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                className="shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hidden"
               >
                 <FaUsers className="text-xl" />
-                Play Guest Multiplayer
+                Play Multiplayer
               </Button>
             </motion.div>
 
@@ -208,7 +215,7 @@ export function EntrypointScreen() {
                 variant="secondary"
                 size="large"
                 fullWidth
-                className="shadow-lg"
+                className="shadow-lg hidden"
               >
                 <FaUserCircle className="text-xl" />
                 Sign Up / Sign In

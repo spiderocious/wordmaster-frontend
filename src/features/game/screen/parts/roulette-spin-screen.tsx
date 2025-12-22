@@ -10,6 +10,7 @@ import { useGameContext } from '../../providers/game-provider';
 import { GameState } from '../../constants/game-state';
 import Confetti from 'react-confetti';
 import { PageTransition } from '@shared/ui/components/page-transition';
+import { soundService } from '@shared/services/sound-service';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const BASE_SPIN_DURATION = 3000; // 3 seconds base
@@ -22,14 +23,19 @@ export function RouletteSpinScreen() {
   const [clickCount, setClickCount] = useState(0);
   const [spinDuration, setSpinDuration] = useState(BASE_SPIN_DURATION);
 
-  // Get the target letter from the current round
   const currentRound = gameContext.rounds[gameContext.currentRoundIndex];
   const targetLetter = currentRound?.letter || 'A';
   const targetIndex = ALPHABET.indexOf(targetLetter.toUpperCase());
 
+  useEffect(() => {
+    const stopSound = soundService.playLetterSpin();
+    return () => stopSound();
+  }, []);
+
   // Handle screen clicks to speed up spin
   function handleClick() {
     if (isSpinning) {
+      soundService.playButtonClick();
       setClickCount((prev) => prev + 1);
       const newDuration = Math.max(500, spinDuration - FAST_SPIN_REDUCTION);
       setSpinDuration(newDuration);

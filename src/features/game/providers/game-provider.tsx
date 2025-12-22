@@ -9,6 +9,7 @@ import { GameStateType, GameState } from '../constants/game-state';
 import { Answer, Round } from '../types/game-types';
 import { cacheService } from '@shared/services/cache-service';
 import { gameHistoryService, GameStatus } from '@shared/services/game-history-service';
+import { SoundToggleButton } from '@shared/ui/components/sound-toggle-button';
 
 interface GameContextValue {
   gameId: string | null;
@@ -182,5 +183,10 @@ export function GameProvider({ children }: GameProviderProps) {
     loadGameFromCache,
   };
 
-  return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
+  return (
+    <GameContext.Provider value={value}>
+      <SoundToggleButton />
+      {children}
+    </GameContext.Provider>
+  );
 }

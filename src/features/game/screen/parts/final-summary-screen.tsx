@@ -12,6 +12,7 @@ import { PageTransition } from '@shared/ui/components/page-transition';
 import { gameApi } from '../../api/game-api';
 import { GameStats } from '../../types/game-types';
 import { Button } from '@ui/components';
+import { soundService } from '@shared/services/sound-service';
 import {
   FaCheckCircle,
   FaBullseye,
@@ -91,9 +92,11 @@ export function FinalSummaryScreen() {
 
         if (response.success && response.data) {
           setStats(response.data.stats);
+          soundService.playComplete();
           setIsLoading(false);
         } else {
           setError('Failed to load summary');
+          soundService.playError();
           setIsLoading(false);
         }
       } catch (err) {
@@ -107,16 +110,19 @@ export function FinalSummaryScreen() {
   }, []);
 
   function handlePlayAgain() {
+    soundService.playButtonClick();
     gameContext.startNewGame();
     navigate('/game/start');
   }
 
   function handleBackToHome() {
+    soundService.playButtonClick();
     gameContext.clearGame();
     navigate('/');
   }
 
   function handleShare() {
+    soundService.playButtonClick();
     const shareText = `I scored ${stats?.totalScore.toLocaleString()} points in WordBlitz! 🎉\n${stats?.accuracy}% accuracy | ${stats?.performanceGrade} grade`;
 
     if (navigator.share) {
@@ -169,6 +175,7 @@ export function FinalSummaryScreen() {
   return (
     <PageTransition direction="up" className="min-h-screen">
       <div className="min-h-screen w-full bg-gray-50 flex flex-col relative overflow-hidden">
+
         {/* Header */}
         <header className="bg-white text-gray-900 px-4 py-4 shadow-md relative z-10">
           <div className="flex items-center justify-between">

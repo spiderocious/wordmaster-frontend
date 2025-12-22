@@ -10,11 +10,17 @@ import { useGameContext } from '../../providers/game-provider';
 import { GameState } from '../../constants/game-state';
 import Confetti from 'react-confetti';
 import { PageTransition } from '@shared/ui/components/page-transition';
+import { soundService } from '@shared/services/sound-service';
 
 export function RoundStartScreen() {
   const gameContext = useGameContext();
   const currentRound = gameContext.currentRoundIndex + 1;
   const totalRounds = gameContext.totalRounds;
+
+  useEffect(() => {
+    const stopSound = soundService.playRoundStart();
+    return () => stopSound();
+  }, []);
 
   // Auto-transition to roulette spin after 2 seconds
   useEffect(() => {

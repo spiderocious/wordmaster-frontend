@@ -37,6 +37,8 @@ export function EntrypointScreen() {
   function handleHowToPlay() {
     navigate(ROUTES.howToPlay.absPath);
   }
+  
+  const year = new Date().getFullYear();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col relative overflow-hidden">
@@ -100,7 +102,7 @@ export function EntrypointScreen() {
               ease: 'linear',
             }}
           >
-            AlphaGame
+            Wordshot
           </motion.h1>
           <motion.div
             className="ml-auto"
@@ -254,7 +256,7 @@ export function EntrypointScreen() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}
       >
-        © 2024 AlphaGame. All rights reserved.
+        © {year} AlphaGame. All rights reserved.
       </motion.footer>
     </div>
   );

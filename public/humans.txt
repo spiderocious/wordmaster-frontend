@@ -1,0 +1,14 @@
+/* TEAM */
+  Developer: WordShot Team
+  Site: https://wordshot.netlify.app
+  Location: World Wide Web
+
+/* THANKS */
+  To all the word game enthusiasts who play and enjoy WordShot!
+
+/* SITE */
+  Last update: 2024/12/22
+  Language: English
+  Standards: HTML5, CSS3, JavaScript ES6+
+  Components: React, TypeScript, Tailwind CSS, Framer Motion
+  Software: Vite, Node.js

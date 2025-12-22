@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Disallow admin or private routes
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://wordshot.netlify.app/sitemap.xml

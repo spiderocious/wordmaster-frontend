@@ -1,0 +1,42 @@
+{
+  "name": "WordShot - Word Category Game",
+  "short_name": "WordShot",
+  "description": "A fast-paced word category game where you race against time to find words starting with specific letters.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["games", "education", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "Start New Game",
+      "short_name": "New Game",
+      "description": "Start a new WordShot game",
+      "url": "/game/start",
+      "icons": [{ "src": "/icon-new-game.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/gameplay.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ]
+}

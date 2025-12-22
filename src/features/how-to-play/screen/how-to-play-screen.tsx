@@ -21,6 +21,7 @@ import {
   FaVirus,
   FaUtensils,
   FaLanguage,
+  FiArrowLeft,
 } from "@icons";
 import { ROUTES } from "@shared/constants/routes";
 import { Button, Heading, Text } from "@ui/components";
@@ -51,6 +52,10 @@ export function HowToPlayScreen() {
 
   function handleSkip() {
     navigate(ROUTES.game.start.absPath);
+  }
+
+  function handleBack() {
+    navigate(ROUTES.ROOT.absPath)
   }
 
   const progress = ((15 - countdown) / 15) * 100;
@@ -127,82 +132,123 @@ export function HowToPlayScreen() {
           >
             {/* Step 1 */}
             <motion.div
-              className="bg-white p-3 shadow-md flex items-center gap-2"
+              className="bg-white p-3 shadow-md"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-6 h-6 bg-primary text-white flex items-center justify-center font-bold text-xs">
-                1
-              </div>
-              <div className="flex-shrink-0 text-primary text-lg">
-                <FiShuffle />
-              </div>
-              <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-6 h-6 bg-primary text-white flex items-center justify-center font-bold text-xs">
+                  1
+                </div>
+                <div className="flex-shrink-0 text-primary text-lg">
+                  <FiShuffle />
+                </div>
                 <h3 className="font-semibold text-sm text-gray-900">
-                  Random Letter
+                  You Get a Random Letter
                 </h3>
               </div>
+              <p className="text-xs text-gray-600 ml-8">
+                The game picks a random letter and category for you
+              </p>
             </motion.div>
 
             {/* Step 2 */}
             <motion.div
-              className="bg-white p-3 shadow-md flex items-center gap-2"
+              className="bg-white p-3 shadow-md"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
-                2
-              </div>
-              <div className="flex-shrink-0 text-purple-600 text-lg">
-                <FaKeyboard />
-              </div>
-              <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-6 h-6 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
+                  2
+                </div>
+                <div className="flex-shrink-0 text-purple-600 text-lg">
+                  <FaKeyboard />
+                </div>
                 <h3 className="font-semibold text-sm text-gray-900">
-                  Type an Answer
+                  Type a Word That Fits
                 </h3>
               </div>
+              <p className="text-xs text-gray-600 ml-8">
+                Think of a word in that category starting with that letter
+              </p>
             </motion.div>
 
             {/* Step 3 */}
             <motion.div
-              className="bg-white p-3 shadow-md flex items-center gap-2"
+              className="bg-white p-3 shadow-md"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-6 h-6 bg-orange-600 text-white flex items-center justify-center font-bold text-xs">
-                3
-              </div>
-              <div className="flex-shrink-0 text-orange-600 text-lg">
-                <FaClock />
-              </div>
-              <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-6 h-6 bg-orange-600 text-white flex items-center justify-center font-bold text-xs">
+                  3
+                </div>
+                <div className="flex-shrink-0 text-orange-600 text-lg">
+                  <FaClock />
+                </div>
                 <h3 className="font-semibold text-sm text-gray-900">
-                  Beat 30 Seconds
+                  You Have 30 Seconds
                 </h3>
               </div>
+              <p className="text-xs text-gray-600 ml-8">
+                Answer quickly! The faster you type, the higher your score
+              </p>
             </motion.div>
 
             {/* Step 4 */}
             <motion.div
-              className="bg-white p-3 shadow-md flex items-center gap-2"
+              className="bg-white p-3 shadow-md"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white flex items-center justify-center font-bold text-xs">
-                4
-              </div>
-              <div className="flex-shrink-0 text-green-600 text-lg">
-                <FaTrophy />
-              </div>
-              <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-shrink-0 w-6 h-6 bg-green-600 text-white flex items-center justify-center font-bold text-xs">
+                  4
+                </div>
+                <div className="flex-shrink-0 text-green-600 text-lg">
+                  <FaTrophy />
+                </div>
                 <h3 className="font-semibold text-sm text-gray-900">
-                  Earn Points
+                  Earn Points & Play 5 Rounds
                 </h3>
               </div>
+              <p className="text-xs text-gray-600 ml-8">
+                Complete all 5 rounds and see your final score
+              </p>
             </motion.div>
+          </motion.div>
+
+          {/* Example Section */}
+          <motion.div
+            className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 mb-4 border-2 border-blue-200"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <Text className="text-gray-700 text-xs font-semibold mb-2 text-center">
+              Example Round
+            </Text>
+            <div className="bg-white p-2 shadow-sm mb-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-600">Category:</span>
+                <span className="text-sm font-bold text-gray-900">Animal</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-600">Letter:</span>
+                <span className="text-2xl font-bold text-primary">L</span>
+              </div>
+            </div>
+            <div className="bg-green-50 border border-green-200 p-2 mt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-green-700 font-medium">Correct answers:</span>
+                <span className="text-xs text-green-900">Lion, Leopard, Llama, Lizard</span>
+              </div>
+            </div>
           </motion.div>
 
           {/* Categories Section */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="hidden"
           >
             <Text className="text-gray-500 text-xs uppercase tracking-wide mb-2 text-center font-semibold">
               Categories You'll See
@@ -268,7 +314,7 @@ export function HowToPlayScreen() {
             className="text-center"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
           >
             <Button
               onClick={handleSkip}
@@ -277,6 +323,14 @@ export function HowToPlayScreen() {
               className="w-full"
             >
               Skip & Start Now
+              </Button>
+              <Button
+              onClick={handleBack}
+              variant="secondary"
+              size="medium"
+              className="w-full mt-2"
+            >
+              <FiArrowLeft /> Back 
             </Button>
           </motion.div>
         </div>

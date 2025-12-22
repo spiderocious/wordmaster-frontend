@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { FaArrowLeft } from '@icons';
-import { getGameSessionRoute } from '@shared/constants/routes';
+import { getGameSessionRoute, ROUTES } from '@shared/constants/routes';
 import { Button, Heading, Text } from '@ui/components';
 import { gameApi } from '../api/game-api';
 import { useGameContext } from '../providers/game-provider';
@@ -47,7 +47,7 @@ export function GameStartScreen() {
   }
 
   function handleBack() {
-    navigate(-1);
+    navigate(ROUTES.howToPlay.absPath)
   }
 
   return (

@@ -10,16 +10,16 @@ class SoundService {
   private activeSounds: Set<HTMLAudioElement> = new Set();
 
   private sounds = {
-    buttonClick: new Audio('public/sounds/button-click.wav'),
-    roundStart: new Audio('/public/sounds/round-start.wav'),
-    letterSpin: new Audio('/public/sounds/spin.wav'),
+    buttonClick: new Audio('sounds/button-click.wav'),
+    roundStart: new Audio('/sounds/round-start.wav'),
+    letterSpin: new Audio('/sounds/spin.wav'),
     letterReveal: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3'),
-    success: new Audio('/public/sounds/success.wav'),
+    success: new Audio('/sounds/success.wav'),
     error: new Audio('https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3'),
     tick: new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBg=='),
-    complete: new Audio('/public/sounds/complete.wav'),
-    answering: new Audio('/public/sounds/answering.wav'),
-    welcome: new Audio('/public/sounds/welcome.wav'),
+    complete: new Audio('/sounds/complete.wav'),
+    answering: new Audio('/sounds/answering.wav'),
+    welcome: new Audio('/sounds/welcome.wav'),
   };
 
   constructor() {

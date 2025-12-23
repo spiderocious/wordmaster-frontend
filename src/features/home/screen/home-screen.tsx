@@ -13,7 +13,7 @@ export function HomeScreen() {
   return (
     <PageWithOutlet>
       <PageHeader
-        title="Welcome to AlphaGame"
+        title="Welcome to WordShot"
         subtitle="Built with Feature-Sliced Design Architecture"
       />
       <PageContent>

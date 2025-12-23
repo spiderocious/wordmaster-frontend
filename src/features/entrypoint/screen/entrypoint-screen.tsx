@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 /**
  * Entrypoint Screen
  *
- * Gamified landing page for AlphaGame - The Alphabet Category Game
+ * Gamified landing page for WordShot - The Alphabet Category Game
  * Features animations, confetti effects, and exciting visual elements
  */
 export function EntrypointScreen() {
@@ -256,7 +256,7 @@ export function EntrypointScreen() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}
       >
-        © {year} AlphaGame. All rights reserved.
+        © {year} WordShot. All rights reserved.
       </motion.footer>
     </div>
   );

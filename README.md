@@ -1,4 +1,4 @@
-# 🎮 AlphaGame
+# 🎮 WordShot
 
 **Unleash Your Inner Wordsmith!**
 
@@ -271,13 +271,13 @@ import { HeroIllustration } from './parts/hero-illustration';
 
 ## 📄 License
 
-© 2024 AlphaGame. All rights reserved.
+© 2024 WordShot. All rights reserved.
 
 ---
 
 ## 🎯 Game Concept
 
-**AlphaGame** is an alphabet category word game where:
+**WordShot** is an alphabet category word game where:
 - Players receive a random letter each round
 - They must fill in words for different categories (Animal, Food, Place, Bible Name, etc.)
 - Each answer must start with the given letter

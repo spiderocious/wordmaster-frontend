@@ -47,6 +47,7 @@ export const ROUTES = {
   ROOT: { absPath: '/', relativePath: '/' },
   HOME: route('home'),
   howToPlay: route('how-to-play'),
+  demo: route('demo'),
   game: route('game', {
     start: { absPath: '/start', relativePath: 'start' },
     session: { absPath: '/session/:gameId', relativePath: 'session/:gameId' },

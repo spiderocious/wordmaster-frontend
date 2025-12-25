@@ -32,8 +32,9 @@ export function formatCategoryChallenge(letter: string, categoryName: string): s
   const article = useAn(categoryName) ? 'An' : 'A';
   const uppercasedCategory = categoryName.toUpperCase();
   const uppercasedLetter = letter.toUpperCase();
+  const bibleCategories = ['bible', 'BIBLE', 'Bible'];
 
-  if (categoryName === 'bible') {
+  if (bibleCategories.includes(categoryName)) {
     return `A name from the BIBLE that starts with letter ${uppercasedLetter}`;
   }
 

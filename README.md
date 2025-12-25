@@ -23,7 +23,7 @@ npm run preview
 ```
 
 ---
-
+e
 ## 🏗️ Project Architecture
 
 This project follows **Feature-Sliced Design (FSD)** architecture for maximum scalability and maintainability.

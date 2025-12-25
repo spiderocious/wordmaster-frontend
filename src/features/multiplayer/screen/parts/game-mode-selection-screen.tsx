@@ -12,10 +12,12 @@ import { PageTransition } from '@shared/ui/components/page-transition';
 import { UsernameModal } from '@shared/ui/components/username-modal';
 import { soundService } from '@shared/services/sound-service';
 import { useUsernameGuard } from '@shared/hooks/use-username-guard';
+import { useState } from 'react';
 
 export function GameModeSelectionScreen() {
   const navigate = useNavigate();
   const { showModal, checkAndPrompt, closeModal, saveUsername } = useUsernameGuard();
+  const [action, setAction] = useState<'host' | 'join' | null>(null);
 
   function handleHostGame() {
     soundService.playButtonClick();
@@ -24,6 +26,7 @@ export function GameModeSelectionScreen() {
     if (hasUsername) {
       navigate(ROUTES.multiplayer.host.absPath);
     }
+    setAction('host');
   }
 
   function handleJoinGame() {
@@ -31,12 +34,18 @@ export function GameModeSelectionScreen() {
 
     const hasUsername = checkAndPrompt();
     if (hasUsername) {
-      navigate(ROUTES.multiplayer.join.absPath);
+      navigate(ROUTES.multiplayer.joinWaiting.absPath);
     }
+    setAction('join');
   }
 
   function handleUsernameSubmit(username: string) {
     saveUsername(username);
+    if (action === 'host') {
+      handleHostGame();
+    } else if (action === 'join') {
+      handleJoinGame();
+    }
   }
 
   return (

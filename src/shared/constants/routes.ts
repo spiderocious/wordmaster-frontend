@@ -55,7 +55,8 @@ export const ROUTES = {
   multiplayer: route('multiplayer', {
     mode: { absPath: '/mode', relativePath: 'mode' },
     host: { absPath: '/host', relativePath: 'host' },
-    join: { absPath: '/join/:code?', relativePath: 'join/:code?' },
+    join: { absPath: '/join/:code', relativePath: 'join/:code' },
+    joinWaiting: { absPath: '/join', relativePath: 'join' },
   }),
 
 } as const;

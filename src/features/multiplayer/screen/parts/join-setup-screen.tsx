@@ -18,9 +18,10 @@ import { ROUTES } from '@shared/constants/routes';
 import { getAvatarUrl } from '../../constants/game-config';
 
 export function JoinSetupScreen() {
+  console.log('join screen');
   const { code } = useParams<{ code?: string }>();
   const navigate = useNavigate();
-  const { joinRoom, isJoiningRoom, error, clearError } = useMultiplayer();
+  const { room, joinRoom, isJoiningRoom, error, clearError } = useMultiplayer();
 
   const savedUsername = usernameService.getUsername();
   const [joinCode, setJoinCode] = useState(code || '');
@@ -35,10 +36,17 @@ export function JoinSetupScreen() {
     }
 
     // Auto-join if code is provided in URL
-    if (code && code.length === 6) {
+    if (code && code.length === 6 && !room) {
       handleJoinRoom();
     }
   }, []);
+
+  // Navigate to waiting room after successful join
+  useEffect(() => {
+    if (room && !isJoiningRoom) {
+      navigate(`${ROUTES.multiplayer.absPath}/waiting`);
+    }
+  }, [room, isJoiningRoom, navigate]);
 
   function handleJoinRoom() {
     if (!canJoin) return;

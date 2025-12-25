@@ -21,7 +21,7 @@ export function WaitingRoomScreen() {
   const { room, isHost, startGame, leaveRoom, error } = useMultiplayer();
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
   const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
-
+  console.log(ROUTES.multiplayer);
   const playerCount = room?.players.length || 0;
   const canStartGame = isHost && playerCount >= MIN_PLAYERS;
 
@@ -39,7 +39,7 @@ export function WaitingRoomScreen() {
 
   function handleCopyLink() {
     if (room?.joinCode) {
-      const shareUrl = `${window.location.origin}${ROUTES.multiplayer.join.absPath}/${room.joinCode}`;
+      const shareUrl = `${window.location.origin}/multiplayer/join/${room.joinCode}`;
       navigator.clipboard.writeText(shareUrl);
       setCopyLinkSuccess(true);
       soundService.playSuccess();
@@ -52,7 +52,7 @@ export function WaitingRoomScreen() {
 
   async function handleShareLink() {
     if (room?.joinCode) {
-      const shareUrl = `${window.location.origin}${ROUTES.multiplayer.join.absPath}/${room.joinCode}`;
+      const shareUrl = `${window.location.origin}/multiplayer/join/${room.joinCode}`;
 
       if (navigator.share) {
         try {

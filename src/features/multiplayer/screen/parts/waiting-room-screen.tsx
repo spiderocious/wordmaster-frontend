@@ -176,7 +176,7 @@ export function WaitingRoomScreen() {
           <div className="w-full mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">
-                Players ({playerCount}/{MIN_PLAYERS})
+                Players ({playerCount})
               </h2>
               {playerCount < MIN_PLAYERS && (
                 <span className="text-sm text-gray-500">Checking for players...</span>

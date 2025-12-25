@@ -14,6 +14,12 @@ const MultiplayerScreen = lazy(() =>
   })),
 );
 
+const HostScreenWrapper = lazy(() =>
+  import('./screen/host-screen-wrapper').then((module) => ({
+    default: module.HostScreenWrapper,
+  })),
+);
+
 export const multiplayerRoutes: RouteObject = {
   path: ROUTES.multiplayer.absPath,
   children: [
@@ -21,6 +27,10 @@ export const multiplayerRoutes: RouteObject = {
       path: ROUTES.multiplayer.mode.relativePath,
       Component: MultiplayerScreen,
     },
-    // TODO: Add host and join routes in later phases
+    {
+      path: ROUTES.multiplayer.host.relativePath,
+      Component: HostScreenWrapper,
+    },
+    // TODO: Add join routes in later phase
   ],
 };

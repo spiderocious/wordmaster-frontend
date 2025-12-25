@@ -9,19 +9,34 @@ import { motion } from 'framer-motion';
 import { FaTrophy, FaDoorOpen } from '@icons';
 import { ROUTES } from '@shared/constants/routes';
 import { PageTransition } from '@shared/ui/components/page-transition';
+import { UsernameModal } from '@shared/ui/components/username-modal';
 import { soundService } from '@shared/services/sound-service';
+import { useUsernameGuard } from '@shared/hooks/use-username-guard';
 
 export function GameModeSelectionScreen() {
   const navigate = useNavigate();
+  const { showModal, checkAndPrompt, closeModal, saveUsername } = useUsernameGuard();
 
   function handleHostGame() {
     soundService.playButtonClick();
-    navigate(ROUTES.multiplayer.host.absPath);
+
+    const hasUsername = checkAndPrompt();
+    if (hasUsername) {
+      navigate(ROUTES.multiplayer.host.absPath);
+    }
   }
 
   function handleJoinGame() {
     soundService.playButtonClick();
-    navigate(ROUTES.multiplayer.join.absPath);
+
+    const hasUsername = checkAndPrompt();
+    if (hasUsername) {
+      navigate(ROUTES.multiplayer.join.absPath);
+    }
+  }
+
+  function handleUsernameSubmit(username: string) {
+    saveUsername(username);
   }
 
   return (
@@ -221,6 +236,13 @@ export function GameModeSelectionScreen() {
           </p>
         </motion.div>
       </div>
+
+      {/* Username Modal */}
+      <UsernameModal
+        isOpen={showModal}
+        onSubmit={handleUsernameSubmit}
+        onClose={closeModal}
+      />
     </PageTransition>
   );
 }

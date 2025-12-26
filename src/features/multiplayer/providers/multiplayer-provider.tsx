@@ -4,9 +4,17 @@
  * Manages multiplayer game state and WebSocket event handling
  */
 
-import { createContext, useContext, ReactNode, useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useWebSocket } from './websocket-provider';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { useWebSocket } from "./websocket-provider";
 import {
   Room,
   Player,
@@ -32,8 +40,13 @@ import {
   ConfigUpdatedBroadcast,
   ChatMessagePayload,
   ErrorResponse,
-} from '../types/multiplayer-types';
-import { MAX_ROUNDS_COUNT, MIN_ROUNDS_COUNT, MINIMUM_CATEGORIES } from '../constants/game-config';
+} from "../types/multiplayer-types";
+import {
+  MAX_ROUNDS_COUNT,
+  MIN_ROUNDS_COUNT,
+  MINIMUM_CATEGORIES,
+} from "../constants/game-config";
+import { addRoleToURL, getRoleFromURL } from "../utils/role-encoding";
 
 interface MultiplayerContextValue {
   // Room state
@@ -67,17 +80,25 @@ const MultiplayerContext = createContext<MultiplayerContextValue | null>(null);
 export function useMultiplayer(): MultiplayerContextValue {
   const context = useContext(MultiplayerContext);
   if (!context) {
-    throw new Error('useMultiplayer must be used within MultiplayerProvider');
+    throw new Error("useMultiplayer must be used within MultiplayerProvider");
   }
   return context;
 }
 
+// SessionStorage keys for reconnection
+export const STORAGE_KEYS = {
+  ROOM_DATA: "multiplayer_room_data",
+  USERNAME: "multiplayer_username",
+};
 interface MultiplayerProviderProps {
   children: ReactNode;
   username: string;
 }
 
-export function MultiplayerProvider({ children, username }: MultiplayerProviderProps) {
+export function MultiplayerProvider({
+  children,
+  username,
+}: MultiplayerProviderProps) {
   const navigate = useNavigate();
   const { socket, sendMessage, isConnected } = useWebSocket();
   const [room, setRoom] = useState<Room | null>(null);
@@ -85,29 +106,31 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const hasAttemptedRejoinRef = useRef(false);
 
-  const currentPlayer = room?.players.find(p => p.username === username) || null;
-  const isHost = currentPlayer?.role === 'host';
+  const currentPlayer =
+    room?.players.find((p) => p.username === username) || null;
 
-  // SessionStorage keys for reconnection
-  const STORAGE_KEYS = {
-    ROOM_DATA: 'multiplayer_room_data',
-    USERNAME: 'multiplayer_username',
-  };
+  // Determine isHost from URL parameter (takes precedence for refresh recovery)
+  const roleFromURL = getRoleFromURL();
+  const isHost = roleFromURL ? roleFromURL === "host" : currentPlayer?.role === "host";
 
   // Persist room data to sessionStorage whenever it changes
   useEffect(() => {
     if (room && currentPlayer) {
-      sessionStorage.setItem(STORAGE_KEYS.ROOM_DATA, JSON.stringify({
-        roomId: room.roomId,
-        joinCode: room.joinCode,
-        phase: room.phase,
-        avatar: currentPlayer.avatar,
-      }));
+      sessionStorage.setItem(
+        STORAGE_KEYS.ROOM_DATA,
+        JSON.stringify({
+          roomId: room.roomId,
+          joinCode: room.joinCode,
+          phase: room.phase,
+          avatar: currentPlayer.avatar,
+        })
+      );
       sessionStorage.setItem(STORAGE_KEYS.USERNAME, username);
     } else {
-      sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
-      sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+      // sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+      // sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
     }
   }, [room, username, currentPlayer]);
 
@@ -120,7 +143,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       try {
         const roomData = JSON.parse(storedRoomData);
 
-        console.log('[Multiplayer] Rejoining room:', roomData.joinCode);
+        console.log("[Multiplayer] Rejoining room:", roomData.joinCode);
 
         // Attempt to rejoin the room
         const rejoinPayload: RoomJoinPayload = {
@@ -132,9 +155,9 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
         setIsJoiningRoom(true);
         sendMessage(WSMessageType.ROOM_JOIN, rejoinPayload);
       } catch (err) {
-        console.error('[Multiplayer] Failed to parse stored room data:', err);
-        sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
-        sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+        console.error("[Multiplayer] Failed to parse stored room data:", err);
+        // sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+        // sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
       }
     }
   }, [isConnected, room, sendMessage]);
@@ -142,21 +165,23 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   // Auto-rejoin room on WebSocket reconnection (for mobile background/resume)
   useEffect(() => {
     const handleReconnection = () => {
-      console.log('[Multiplayer] WebSocket reconnected, attempting to rejoin room...');
+      console.log(
+        "[Multiplayer] WebSocket reconnected, attempting to rejoin room..."
+      );
       attemptRejoinRoom();
     };
 
-    window.addEventListener('websocket:reconnected', handleReconnection);
+    window.addEventListener("websocket:reconnected", handleReconnection);
 
     return () => {
-      window.removeEventListener('websocket:reconnected', handleReconnection);
+      window.removeEventListener("websocket:reconnected", handleReconnection);
     };
   }, [attemptRejoinRoom]);
 
   // Auto-rejoin room on page load/refresh (initial mount)
   useEffect(() => {
-    // Only run once on mount when socket first connects
-    if (isConnected && !room) {
+    // Only run once on mount when socket first connects and we haven't rejoined yet
+    if (isConnected && !room && !hasAttemptedRejoinRef.current) {
       const storedRoomData = sessionStorage.getItem(STORAGE_KEYS.ROOM_DATA);
       const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
 
@@ -164,50 +189,78 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
         try {
           const roomData = JSON.parse(storedRoomData);
 
+          console.log(
+            "[Multiplayer] Page refresh detected, stored data found:",
+            {
+              joinCode: roomData.joinCode,
+              phase: roomData.phase,
+            }
+          );
+
+          // Mark that we've attempted to rejoin to prevent multiple attempts
+          hasAttemptedRejoinRef.current = true;
+
           // Check if we should rejoin
           // Only rejoin if we were in lobby (waiting phase)
           // If game was in session, we'll still rejoin but server will handle state
-          if (roomData.phase === 'waiting') {
-            console.log('[Multiplayer] Page refresh detected, rejoining lobby...');
+          if (roomData.phase === "waiting") {
+            console.log("[Multiplayer] Rejoining lobby...");
             attemptRejoinRoom();
           } else {
             // Game was in progress - rejoin but expect to be redirected to lobby
-            console.log('[Multiplayer] Page refresh during game session detected, rejoining...');
-            console.log('[Multiplayer] Note: Will be redirected to lobby after rejoin');
+            console.log("[Multiplayer] Game session detected, rejoining...");
+            console.log(
+              "[Multiplayer] Note: Will be redirected to lobby after rejoin"
+            );
             attemptRejoinRoom();
           }
         } catch (err) {
-          console.error('[Multiplayer] Failed to parse stored room data on mount:', err);
-          sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
-          sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+          console.error(
+            "[Multiplayer] Failed to parse stored room data on mount:",
+            err
+          );
+          // sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+          // sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+          hasAttemptedRejoinRef.current = true; // Mark as attempted even on error
         }
       }
+    }
+
+    // Reset the flag if we successfully joined a room (user manually joined)
+    if (room) {
+      hasAttemptedRejoinRef.current = false;
     }
   }, [isConnected, room, attemptRejoinRoom]);
 
   // Room creation
-  const createRoom = useCallback((payload: RoomCreatePayload) => {
-    if (!isConnected) {
-      setError('Not connected to server');
-      return;
-    }
+  const createRoom = useCallback(
+    (payload: RoomCreatePayload) => {
+      if (!isConnected) {
+        setError("Not connected to server");
+        return;
+      }
 
-    setIsCreatingRoom(true);
-    setError(null);
-    sendMessage(WSMessageType.ROOM_CREATE, payload);
-  }, [isConnected, sendMessage]);
+      setIsCreatingRoom(true);
+      setError(null);
+      sendMessage(WSMessageType.ROOM_CREATE, payload);
+    },
+    [isConnected, sendMessage]
+  );
 
   // Room joining
-  const joinRoom = useCallback((payload: RoomJoinPayload) => {
-    if (!isConnected) {
-      setError('Not connected to server');
-      return;
-    }
+  const joinRoom = useCallback(
+    (payload: RoomJoinPayload) => {
+      if (!isConnected) {
+        setError("Not connected to server");
+        return;
+      }
 
-    setIsJoiningRoom(true);
-    setError(null);
-    sendMessage(WSMessageType.ROOM_JOIN, payload);
-  }, [isConnected, sendMessage]);
+      setIsJoiningRoom(true);
+      setError(null);
+      sendMessage(WSMessageType.ROOM_JOIN, payload);
+    },
+    [isConnected, sendMessage]
+  );
 
   // Leave room
   const leaveRoom = useCallback(() => {
@@ -225,17 +278,22 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   // Start game
   const startGame = useCallback(() => {
     if (!room || !isHost) {
-      setError('Only host can start the game');
+      setError("Only host can start the game");
       return;
     }
 
     if (room.players.length < 2) {
-      setError('Need at least 2 players to start');
+      setError("Need at least 2 players to start");
       return;
     }
 
-    if (room.config.roundsCount < MIN_ROUNDS_COUNT || room.config.roundsCount > MAX_ROUNDS_COUNT) {
-      setError(`Rounds count must be between ${MIN_ROUNDS_COUNT} and ${MAX_ROUNDS_COUNT}`);
+    if (
+      room.config.roundsCount < MIN_ROUNDS_COUNT ||
+      room.config.roundsCount > MAX_ROUNDS_COUNT
+    ) {
+      setError(
+        `Rounds count must be between ${MIN_ROUNDS_COUNT} and ${MAX_ROUNDS_COUNT}`
+      );
       return;
     }
 
@@ -260,25 +318,28 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   }, []);
 
   // Update game config (host only)
-  const updateGameConfig = useCallback((config: GameConfig) => {
-    if (!isHost || !room) {
-      setError('Only host can update configuration');
-      return;
-    }
+  const updateGameConfig = useCallback(
+    (config: GameConfig) => {
+      if (!isHost || !room) {
+        setError("Only host can update configuration");
+        return;
+      }
 
-    const payload: ConfigUpdatePayload = {
-      roomId: room.roomId,
-      username,
-      config,
-    };
+      const payload: ConfigUpdatePayload = {
+        roomId: room.roomId,
+        username,
+        config,
+      };
 
-    sendMessage(WSMessageType.CONFIG_UPDATE, payload);
-  }, [isHost, room, username, sendMessage]);
+      sendMessage(WSMessageType.CONFIG_UPDATE, payload);
+    },
+    [isHost, room, username, sendMessage]
+  );
 
   // End game (host only)
   const endGame = useCallback(() => {
     if (!isHost || !room) {
-      setError('Only host can end the game');
+      setError("Only host can end the game");
       return;
     }
 
@@ -291,29 +352,32 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   }, [isHost, room, username, sendMessage]);
 
   // Send chat message
-  const sendChatMessage = useCallback((message: string) => {
-    if (!room) {
-      setError('Not in a room');
-      return;
-    }
+  const sendChatMessage = useCallback(
+    (message: string) => {
+      if (!room) {
+        setError("Not in a room");
+        return;
+      }
 
-    if (!message.trim()) {
-      return; // Don't send empty messages
-    }
+      if (!message.trim()) {
+        return; // Don't send empty messages
+      }
 
-    if (message.length > 500) {
-      setError('Message too long (max 500 characters)');
-      return;
-    }
+      if (message.length > 500) {
+        setError("Message too long (max 500 characters)");
+        return;
+      }
 
-    const payload: ChatMessagePayload = {
-      roomId: room.roomId,
-      username,
-      message: message.trim(),
-    };
+      const payload: ChatMessagePayload = {
+        roomId: room.roomId,
+        username,
+        message: message.trim(),
+      };
 
-    sendMessage(WSMessageType.CHAT_MESSAGE, payload);
-  }, [room, username, sendMessage]);
+      sendMessage(WSMessageType.CHAT_MESSAGE, payload);
+    },
+    [room, username, sendMessage]
+  );
 
   // Set up event listeners
   useEffect(() => {
@@ -321,7 +385,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Room created
     socket.on(WSMessageType.ROOM_CREATED, (response: RoomCreatedResponse) => {
-      console.log('[Multiplayer] Room created:', response);
+      console.log("[Multiplayer] Room created:", response);
       setIsCreatingRoom(false);
 
       if (response.success) {
@@ -331,22 +395,46 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Room joined
     socket.on(WSMessageType.ROOM_JOINED, (response: RoomJoinedResponse) => {
-      console.log('[Multiplayer] Room joined:', response);
+      console.log("[Multiplayer] Room joined:", response);
       setIsJoiningRoom(false);
 
       if (response.success) {
         setRoom(response.data);
 
-        // Handle navigation after rejoin
-        // If rejoining during an active game session, redirect to lobby
-        if (response.data.phase === 'playing' || response.data.phase === 'finished') {
-          console.log('[Multiplayer] Rejoined during active/finished game, redirecting to lobby...');
-          // Navigate to waiting room (lobby)
-          const isHostUser = response.data.players.find(p => p.username === username)?.role === 'host';
+        // Determine user's role in the room
+        const userInRoom = response.data.players.find((p) => p.username === username);
+        const isHostUser = userInRoom?.role === "host";
+
+        console.log("[Multiplayer] User role in room:", { username, role: userInRoom?.role, isHost: isHostUser });
+
+        // Handle navigation after rejoin to ensure user is on correct route
+        const currentPath = window.location.pathname;
+
+        // If rejoining during an active game session, redirect to lobby with role param
+        if (response.data.phase === "playing" || response.data.phase === "finished") {
+          console.log("[Multiplayer] Rejoined during active/finished game, redirecting to lobby...");
+
           if (isHostUser) {
-            navigate(`/multiplayer/host`);
+            const hostPath = addRoleToURL('/multiplayer/waiting', 'host');
+            navigate(hostPath);
           } else {
-            navigate(`/multiplayer/join/${response.data.joinCode}`);
+            const memberPath = addRoleToURL('/multiplayer/waiting', 'member');
+            navigate(memberPath);
+          }
+        }
+        // If in waiting phase, ensure user is on the correct route for their role
+        else if (response.data.phase === "waiting") {
+          // Host should be on /multiplayer/waiting with host role param
+          if (isHostUser && !currentPath.includes("/multiplayer/host")) {
+            console.log("[Multiplayer] Host on wrong route, redirecting to waiting room with host role");
+            const hostPath = addRoleToURL('/multiplayer/waiting', 'host');
+            navigate(hostPath);
+          }
+          // Regular player should be on /multiplayer/waiting with member role param
+          else if (!isHostUser && currentPath.includes("/multiplayer/host")) {
+            console.log("[Multiplayer] Player on host route, redirecting to waiting room with member role");
+            const memberPath = addRoleToURL('/multiplayer/waiting', 'member');
+            navigate(memberPath);
           }
         }
       }
@@ -354,15 +442,15 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Room left
     socket.on(WSMessageType.ROOM_LEFT, () => {
-      console.log('[Multiplayer] Left room');
+      console.log("[Multiplayer] Left room");
       setRoom(null);
     });
 
     // Player joined broadcast
     socket.on(WSMessageType.PLAYER_JOINED, (data: PlayerJoinedBroadcast) => {
-      console.log('[Multiplayer] Player joined:', data);
+      console.log("[Multiplayer] Player joined:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
         const newPlayer: Player = {
@@ -370,7 +458,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
           username: data.username,
           avatar: data.avatar,
           role: data.role,
-          status: 'active',
+          status: "active",
           currentScore: 0,
           isGuest: true,
         };
@@ -384,18 +472,20 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Player left broadcast
     socket.on(WSMessageType.PLAYER_LEFT, (data: PlayerLeftBroadcast) => {
-      console.log('[Multiplayer] Player left:', data);
+      console.log("[Multiplayer] Player left:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
-        const updatedPlayers = prev.players.filter(p => p.username !== data.username);
+        const updatedPlayers = prev.players.filter(
+          (p) => p.username !== data.username
+        );
 
         // Update host if needed
         if (data.newHostId) {
-          updatedPlayers.forEach(p => {
+          updatedPlayers.forEach((p) => {
             if (p.username === data.newHostId) {
-              p.role = 'host';
+              p.role = "host";
             }
           });
         }
@@ -410,16 +500,16 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Game started broadcast
     socket.on(WSMessageType.GAME_STARTED, (data: GameStartedBroadcast) => {
-      console.log('[Multiplayer] Game started:', data);
-      console.log('[Multiplayer] Phase from server:', data.phase);
-      console.log('[Multiplayer] Round data:', data.round);
+      console.log("[Multiplayer] Game started:", data);
+      console.log("[Multiplayer] Phase from server:", data.phase);
+      console.log("[Multiplayer] Round data:", data.round);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
-          phase: 'playing', // Go directly to playing phase (server includes round data)
+          phase: "playing", // Go directly to playing phase (server includes round data)
           currentRound: data.round.roundNumber,
           totalRounds: data.totalRounds,
           roundData: data.round,
@@ -427,19 +517,19 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       });
 
       // Navigate to session screen
-      navigate('/multiplayer/session');
+      navigate("/multiplayer/session");
     });
 
     // Round started broadcast
     socket.on(WSMessageType.ROUND_STARTED, (data: RoundStartedBroadcast) => {
-      console.log('[Multiplayer] Round started:', data);
+      console.log("[Multiplayer] Round started:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
-          phase: 'playing', // Go directly to playing phase
+          phase: "playing", // Go directly to playing phase
           currentRound: data.roundNumber,
           totalRounds: data.totalRounds,
           roundData: data.round,
@@ -449,64 +539,69 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Round ended broadcast
     socket.on(WSMessageType.ROUND_ENDED, (data: RoundEndedBroadcast) => {
-      console.log('[Multiplayer] Round ended:', data);
+      console.log("[Multiplayer] Round ended:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
-          phase: 'round_end', // Always set to round_end when round ends
+          phase: "round_end", // Always set to round_end when round ends
         };
       });
     });
 
     // Answer submitted broadcast
-    socket.on(WSMessageType.ANSWER_SUBMITTED, (data: AnswerSubmittedBroadcast) => {
-      console.log('[Multiplayer] Answer submitted:', data);
+    socket.on(
+      WSMessageType.ANSWER_SUBMITTED,
+      (data: AnswerSubmittedBroadcast) => {
+        console.log("[Multiplayer] Answer submitted:", data);
 
-      // Check if all players have submitted - transition to round_end CLIENT-SIDE
-      if (data.allSubmitted) {
-        console.log('[Multiplayer] All players submitted! Transitioning to round_end');
-        setRoom(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            phase: 'round_end',
-          };
-        });
+        // Check if all players have submitted - transition to round_end CLIENT-SIDE
+        if (data.allSubmitted) {
+          console.log(
+            "[Multiplayer] All players submitted! Transitioning to round_end"
+          );
+          setRoom((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              phase: "round_end",
+            };
+          });
+        }
       }
-    });
+    );
 
     // Game finished broadcast
     socket.on(WSMessageType.GAME_FINISHED, (data: GameFinishedBroadcast) => {
-      console.log('[Multiplayer] Game finished:', data);
+      console.log("[Multiplayer] Game finished:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
 
         return {
           ...prev,
-          phase: 'finished', // Always set to finished when game ends
+          phase: "finished", // Always set to finished when game ends
         };
       });
     });
 
     // Game ended broadcast (host ended game early)
     socket.on(WSMessageType.GAME_ENDED, (data: GameEndedBroadcast) => {
-      console.log('[Multiplayer] Game ended by host:', data);
+      console.log("[Multiplayer] Game ended by host:", data);
 
       // Reset room to waiting phase
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          phase: 'waiting',
+          phase: "waiting",
           currentRound: undefined,
           totalRounds: undefined,
           roundData: undefined,
           // Keep players in room, just reset game state
-          players: prev.players.map(p => ({
+          players: prev.players.map((p) => ({
             ...p,
             currentScore: 0,
             isReady: false,
@@ -517,9 +612,9 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Config updated broadcast (from host)
     socket.on(WSMessageType.CONFIG_UPDATED, (data: ConfigUpdatedBroadcast) => {
-      console.log('[Multiplayer] Config updated:', data);
+      console.log("[Multiplayer] Config updated:", data);
 
-      setRoom(prev => {
+      setRoom((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
@@ -530,13 +625,13 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     // Chat message broadcast - server sends 'chat:message'
     socket.on(WSMessageType.CHAT_MESSAGE, (data: ChatMessage) => {
-      console.log('[Multiplayer] Chat message received:', data);
-      setMessages(prev => [...prev, data]);
+      console.log("[Multiplayer] Chat message received:", data);
+      setMessages((prev) => [...prev, data]);
     });
 
     // Error handling
     socket.on(WSMessageType.ERROR, (errorResponse: ErrorResponse) => {
-      console.error('[Multiplayer] Error:', errorResponse);
+      console.error("[Multiplayer] Error:", errorResponse);
       setError(errorResponse.message);
       setIsCreatingRoom(false);
       setIsJoiningRoom(false);

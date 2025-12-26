@@ -13,6 +13,7 @@ import { UsernameModal } from '@shared/ui/components/username-modal';
 import { soundService } from '@shared/services/sound-service';
 import { useUsernameGuard } from '@shared/hooks/use-username-guard';
 import { useState } from 'react';
+import { STORAGE_KEYS } from '../../providers/multiplayer-provider';
 
 export function GameModeSelectionScreen() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function GameModeSelectionScreen() {
   const [action, setAction] = useState<'host' | 'join' | null>(null);
 
   function handleHostGame() {
+    sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
     soundService.playButtonClick();
 
     const hasUsername = checkAndPrompt();

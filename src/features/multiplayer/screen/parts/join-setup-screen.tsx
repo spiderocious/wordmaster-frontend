@@ -16,6 +16,7 @@ import { usernameService } from '@shared/services/username-service';
 import { soundService } from '@shared/services/sound-service';
 import { ROUTES } from '@shared/constants/routes';
 import { getAvatarUrl } from '../../constants/game-config';
+import { addRoleToURL } from '../../utils/role-encoding';
 
 export function JoinSetupScreen() {
   const { code } = useParams<{ code?: string }>();
@@ -40,10 +41,12 @@ export function JoinSetupScreen() {
     }
   }, []);
 
-  // Navigate to waiting room after successful join
+  // Navigate to waiting room after successful join with member role param
   useEffect(() => {
     if (room && !isJoiningRoom) {
-      navigate(`${ROUTES.multiplayer.absPath}/waiting`);
+      const waitingPath = `${ROUTES.multiplayer.absPath}/waiting`;
+      const pathWithRole = addRoleToURL(waitingPath, 'member');
+      navigate(pathWithRole);
     }
   }, [room, isJoiningRoom, navigate]);
 

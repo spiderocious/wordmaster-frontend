@@ -69,7 +69,7 @@ export function ThreePanelDesktopWaitingRoom({
   return (
     <div className="min-h-screen bg-[#f9fafb] flex">
       {/* LEFT PANEL - Players */}
-      <div className="w-[30%] p-5">
+      <div className="w-[30%]">
         <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
           {/* Header */}
           <div className="p-5 border-b border-gray-100">
@@ -233,7 +233,7 @@ export function ThreePanelDesktopWaitingRoom({
       </div>
 
       {/* CENTER PANEL - Settings */}
-      <div className="w-[37%] p-5">
+      <div className="w-[37%]">
         <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
           {/* Header */}
           <div className="p-5 border-b border-gray-100">
@@ -376,7 +376,7 @@ export function ThreePanelDesktopWaitingRoom({
       </div>
 
       {/* RIGHT PANEL - Chat */}
-      <div className="w-[33%] p-5">
+      <div className="w-[33%]">
         <div className="bg-white rounded-2xl shadow-sm h-full flex flex-col">
           {/* Header */}
           <div className="p-5 border-b border-gray-100">

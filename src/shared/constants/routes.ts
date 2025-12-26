@@ -48,6 +48,7 @@ export const ROUTES = {
   HOME: route('home'),
   howToPlay: route('how-to-play'),
   demo: route('demo'),
+  multiplayerDemo: route('multiplayer-demo'),
   game: route('game', {
     start: { absPath: '/start', relativePath: 'start' },
     session: { absPath: '/session/:gameId', relativePath: 'session/:gameId' },

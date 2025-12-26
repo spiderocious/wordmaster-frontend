@@ -89,6 +89,66 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   const currentPlayer = room?.players.find(p => p.username === username) || null;
   const isHost = currentPlayer?.role === 'host';
 
+  // SessionStorage keys for reconnection
+  const STORAGE_KEYS = {
+    ROOM_DATA: 'multiplayer_room_data',
+    USERNAME: 'multiplayer_username',
+  };
+
+  // Persist room data to sessionStorage whenever it changes
+  useEffect(() => {
+    if (room && currentPlayer) {
+      sessionStorage.setItem(STORAGE_KEYS.ROOM_DATA, JSON.stringify({
+        roomId: room.roomId,
+        joinCode: room.joinCode,
+        phase: room.phase,
+        avatar: currentPlayer.avatar,
+      }));
+      sessionStorage.setItem(STORAGE_KEYS.USERNAME, username);
+    } else {
+      sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+      sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+    }
+  }, [room, username, currentPlayer]);
+
+  // Auto-rejoin room on reconnection
+  useEffect(() => {
+    const handleReconnection = () => {
+      console.log('[Multiplayer] WebSocket reconnected, attempting to rejoin room...');
+
+      const storedRoomData = sessionStorage.getItem(STORAGE_KEYS.ROOM_DATA);
+      const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
+
+      if (storedRoomData && storedUsername && isConnected && !room) {
+        try {
+          const roomData = JSON.parse(storedRoomData);
+
+          console.log('[Multiplayer] Rejoining room:', roomData.joinCode);
+
+          // Attempt to rejoin the room
+          const rejoinPayload: RoomJoinPayload = {
+            joinCode: roomData.joinCode,
+            username: storedUsername,
+            avatar: roomData.avatar,
+          };
+
+          setIsJoiningRoom(true);
+          sendMessage(WSMessageType.ROOM_JOIN, rejoinPayload);
+        } catch (err) {
+          console.error('[Multiplayer] Failed to parse stored room data:', err);
+          sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+          sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+        }
+      }
+    };
+
+    window.addEventListener('websocket:reconnected', handleReconnection);
+
+    return () => {
+      window.removeEventListener('websocket:reconnected', handleReconnection);
+    };
+  }, [isConnected, room, sendMessage]);
+
   // Room creation
   const createRoom = useCallback((payload: RoomCreatePayload) => {
     if (!isConnected) {

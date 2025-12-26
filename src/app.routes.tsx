@@ -3,6 +3,7 @@ import { lazy } from 'react';
 import { homeRoutes } from '@features/home/home.routes';
 import { howToPlayRoutes } from '@features/how-to-play/how-to-play.routes';
 import { demoRoutes } from '@features/demo/demo.routes';
+import { multiplayerDemoRoutes } from '@features/multiplayer-demo/multiplayer-demo.routes';
 import { gameRoutes } from '@features/game/game.routes';
 import { multiplayerRoutes } from '@features/multiplayer/multiplayer.routes';
 import { AppEntrypoint } from './app.entrypoint';
@@ -38,6 +39,7 @@ export const routes: RouteObject[] = [
       homeRoutes,
       howToPlayRoutes,
       demoRoutes,
+      multiplayerDemoRoutes,
       gameRoutes,
       multiplayerRoutes,
     ],

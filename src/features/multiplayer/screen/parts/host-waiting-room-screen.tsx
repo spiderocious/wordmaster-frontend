@@ -19,6 +19,7 @@ import {
 } from '../../constants/game-config';
 import { useMultiplayer } from '../../providers/multiplayer-provider';
 import { ConnectionStatusIndicator } from './connection-status-indicator';
+import { addRoleToURL } from '../../utils/role-encoding';
 
 export function HostWaitingRoomScreen() {
   const navigate = useNavigate();
@@ -45,10 +46,12 @@ export function HostWaitingRoomScreen() {
     }
   }, [username, room, isCreatingRoom, createRoom, navigate]);
 
-  // Navigate to waiting room after room is created
+  // Navigate to waiting room after room is created with role param
   useEffect(() => {
     if (room && !isCreatingRoom) {
-      navigate(`${ROUTES.multiplayer.absPath}/waiting`);
+      const waitingPath = `${ROUTES.multiplayer.absPath}/waiting`;
+      const pathWithRole = addRoleToURL(waitingPath, 'host');
+      navigate(pathWithRole);
     }
   }, [room, isCreatingRoom, navigate]);
 

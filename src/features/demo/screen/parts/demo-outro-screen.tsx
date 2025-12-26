@@ -6,30 +6,16 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import Confetti from 'react-confetti';
 import { useDemoContext } from '../../providers/demo-provider';
 import { soundService } from '@shared/services/sound-service';
-import { Button } from '@ui/components';
-import { ROUTES } from '@shared/constants/routes';
 
 export function DemoOutroScreen() {
   const { roundScore } = useDemoContext();
-  const navigate = useNavigate();
 
   useEffect(() => {
     soundService.playComplete();
   }, []);
-
-  function handlePlayNow() {
-    soundService.playButtonClick();
-    navigate(ROUTES.game.start.absPath);
-  }
-
-  function handleWatchAgain() {
-    soundService.playButtonClick();
-    window.location.reload();
-  }
 
   return (
     <div className="h-screen w-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 flex items-center justify-center overflow-hidden relative">

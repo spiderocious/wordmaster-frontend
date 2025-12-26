@@ -27,7 +27,8 @@ export function EntrypointScreen() {
   }
 
   function handlePlayGuestMultiplayer() {
-    //navigate(ROUTES.multiplayer.absPath);
+    navigate(ROUTES.multiplayer.mode.absPath);
+    soundService.playButtonClick();
   }
 
   function handleSignIn() {
@@ -199,7 +200,7 @@ export function EntrypointScreen() {
                 variant="primary"
                 size="large"
                 fullWidth
-                className="shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hidden"
+                className="shadow-2xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >
                 <FaUsers className="text-xl" />
                 Play Multiplayer

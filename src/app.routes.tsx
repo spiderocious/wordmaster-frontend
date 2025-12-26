@@ -4,6 +4,7 @@ import { homeRoutes } from '@features/home/home.routes';
 import { howToPlayRoutes } from '@features/how-to-play/how-to-play.routes';
 import { demoRoutes } from '@features/demo/demo.routes';
 import { gameRoutes } from '@features/game/game.routes';
+import { multiplayerRoutes } from '@features/multiplayer/multiplayer.routes';
 import { AppEntrypoint } from './app.entrypoint';
 import { ROUTES } from '@shared/constants/routes';
 
@@ -38,6 +39,7 @@ export const routes: RouteObject[] = [
       howToPlayRoutes,
       demoRoutes,
       gameRoutes,
+      multiplayerRoutes,
     ],
   },
 ];

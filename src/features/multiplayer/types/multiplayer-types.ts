@@ -238,6 +238,7 @@ export interface AnswerSubmittedBroadcast {
   username: string;
   submittedCount: number;
   totalPlayers: number;
+  allSubmitted: boolean;
 }
 
 export interface RoundEndedBroadcast {

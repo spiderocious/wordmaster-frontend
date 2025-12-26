@@ -6,16 +6,20 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { FaStopCircle } from '@icons';
 import { PageTransition } from '@shared/ui/components/page-transition';
 import { useMultiplayer } from '../../providers/multiplayer-provider';
 import { useWebSocket } from '../../providers/websocket-provider';
 import { soundService } from '@shared/services/sound-service';
 import { formatCategoryChallenge } from '@shared/utils/format-category-challenge';
 import { WSMessageType, AnswerSubmitPayload } from '../../types/multiplayer-types';
+import { EndGameConfirmationDialog } from './end-game-confirmation-dialog';
 
 export function MPAnsweringScreen() {
-  const { room, currentPlayer, error } = useMultiplayer();
-  const { socket, sendMessage } = useWebSocket();
+  const { room, currentPlayer, isHost, endGame, error } = useMultiplayer();
+  const { sendMessage } = useWebSocket();
+
+  const [showEndGameDialog, setShowEndGameDialog] = useState(false);
 
   const letter = room?.roundData?.letter || 'A';
   const categories = room?.roundData?.categories || [];
@@ -198,18 +202,45 @@ export function MPAnsweringScreen() {
     }
   }
 
+  function handleEndGame() {
+    setShowEndGameDialog(true);
+  }
+
+  function handleConfirmEndGame() {
+    endGame();
+    setShowEndGameDialog(false);
+  }
+
+  function handleCancelEndGame() {
+    setShowEndGameDialog(false);
+  }
+
   if (!currentCategory) {
     return null;
   }
 
   return (
     <PageTransition className="h-screen">
+      <EndGameConfirmationDialog
+        isOpen={showEndGameDialog}
+        onConfirm={handleConfirmEndGame}
+        onCancel={handleCancelEndGame}
+      />
       <div className="h-screen w-full bg-gray-50 flex flex-col relative overflow-hidden">
         {/* Header */}
         <header className="bg-white text-gray-900 px-4 py-3 flex items-center justify-between shadow-md relative z-10">
           <div className="bg-gray-100 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
             Round {room?.currentRound || 1}/{room?.totalRounds || 1}
           </div>
+          {isHost && (
+            <button
+              onClick={handleEndGame}
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <FaStopCircle />
+              End
+            </button>
+          )}
           <motion.div
             key={`score-${currentPlayer?.currentScore}`}
             initial={{ scale: 1.5 }}
@@ -384,13 +415,12 @@ export function MPAnsweringScreen() {
                     {categories.map((_, index) => (
                       <div
                         key={index}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          index < currentCategoryIndex
+                        className={`w-2 h-2 rounded-full transition-all ${index < currentCategoryIndex
                             ? 'bg-green-500'
                             : index === currentCategoryIndex
-                            ? 'bg-blue-600 scale-125'
-                            : 'bg-gray-300'
-                        }`}
+                              ? 'bg-blue-600 scale-125'
+                              : 'bg-gray-300'
+                          }`}
                       />
                     ))}
                   </div>

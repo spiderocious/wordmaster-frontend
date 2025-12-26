@@ -18,6 +18,7 @@ import {
   RoundResultsSuccessResponse,
   RoundNextPayload,
 } from '../../types/multiplayer-types';
+import { EndGameConfirmationDialog } from './end-game-confirmation-dialog';
 
 interface RoundResultsData {
   letter: string;
@@ -35,10 +36,11 @@ interface RoundResultsData {
 }
 
 export function MPRoundResultsScreen() {
-  const { room, currentPlayer, isHost } = useMultiplayer();
+  const { room, currentPlayer, isHost, endGame } = useMultiplayer();
   const { socket, sendMessage } = useWebSocket();
   const [isLoading, setIsLoading] = useState(true);
   const [resultsData, setResultsData] = useState<RoundResultsData | null>(null);
+  const [showEndGameDialog, setShowEndGameDialog] = useState(false);
 
   useEffect(() => {
     soundService.playSuccess();
@@ -112,6 +114,16 @@ export function MPRoundResultsScreen() {
     sendMessage(WSMessageType.ROUND_NEXT, payload);
   }
 
+
+  function handleConfirmEndGame() {
+    endGame();
+    setShowEndGameDialog(false);
+  }
+
+  function handleCancelEndGame() {
+    setShowEndGameDialog(false);
+  }
+
   if (!room) return null;
 
   const currentRound = room.currentRound || 1;
@@ -135,6 +147,11 @@ export function MPRoundResultsScreen() {
 
   return (
     <PageTransition className="min-h-screen">
+      <EndGameConfirmationDialog
+        isOpen={showEndGameDialog}
+        onConfirm={handleConfirmEndGame}
+        onCancel={handleCancelEndGame}
+      />
       <div className="min-h-screen w-full bg-gray-50 flex flex-col px-4 py-6">
         <div className="max-w-2xl mx-auto w-full">
           {/* Header */}
@@ -236,22 +253,20 @@ export function MPRoundResultsScreen() {
                   initial={{ x: -50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.5 + index * 0.1 }}
-                  className={`rounded-2xl p-4 flex items-center gap-4 ${
-                    player.username === 'You'
+                  className={`rounded-2xl p-4 flex items-center gap-4 ${player.username === 'You'
                       ? 'bg-blue-100 border-2 border-blue-500'
                       : 'bg-white border-2 border-gray-100'
-                  }`}
+                    }`}
                 >
                   {/* Rank */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg ${
-                    player.rank === 1
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg ${player.rank === 1
                       ? 'bg-yellow-400 text-yellow-900'
                       : player.rank === 2
-                      ? 'bg-gray-300 text-gray-700'
-                      : player.rank === 3
-                      ? 'bg-orange-300 text-orange-900'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
+                        ? 'bg-gray-300 text-gray-700'
+                        : player.rank === 3
+                          ? 'bg-orange-300 text-orange-900'
+                          : 'bg-gray-200 text-gray-600'
+                    }`}>
                     {player.rank}
                   </div>
 
@@ -269,13 +284,12 @@ export function MPRoundResultsScreen() {
                   {/* Name and score change */}
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-gray-900">{player.username}</h3>
-                    <p className={`text-sm font-semibold ${
-                      player.scoreChange.startsWith('+')
+                    <p className={`text-sm font-semibold ${player.scoreChange.startsWith('+')
                         ? 'text-green-600'
                         : player.scoreChange.startsWith('-')
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                    }`}>
+                          ? 'text-red-600'
+                          : 'text-gray-500'
+                      }`}>
                       {player.scoreChange}
                     </p>
                   </div>
@@ -308,19 +322,21 @@ export function MPRoundResultsScreen() {
             </motion.div>
           </motion.div>
 
-          {/* Next round button - host only */}
+          {/* Action buttons - host only */}
           {isHost ? (
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-              onClick={handleNextRound}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span>{currentRound < totalRounds ? 'Start Next Round' : 'View Final Summary'}</span>
-            </motion.button>
+            <div className="space-y-3">
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 }}
+                onClick={handleNextRound}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span>{currentRound < totalRounds ? 'Start Next Round' : 'View Final Summary'}</span>
+              </motion.button>
+            </div>
           ) : (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

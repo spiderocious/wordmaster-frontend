@@ -5,22 +5,19 @@
  * Room is created automatically on mount
  */
 
+import { FaCog, FaCopy, FaCrown, FaShare, FaUserCircle } from '@icons';
+import { ROUTES } from '@shared/constants/routes';
+import { soundService } from '@shared/services/sound-service';
+import { usernameService } from '@shared/services/username-service';
+import { PageTransition } from '@shared/ui/components/page-transition';
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaCrown, FaCopy, FaShare, FaCog, FaUserCircle } from '@icons';
-import { PageTransition } from '@shared/ui/components/page-transition';
-import { useMultiplayer } from '../../providers/multiplayer-provider';
-import { usernameService } from '@shared/services/username-service';
-import { soundService } from '@shared/services/sound-service';
-import { ROUTES } from '@shared/constants/routes';
 import {
-  DEFAULT_ROUNDS_COUNT,
-  AVAILABLE_CATEGORIES,
-  DEFAULT_EXCLUDED_LETTERS,
   getAvatarUrl,
-  MIN_PLAYERS,
+  MIN_PLAYERS
 } from '../../constants/game-config';
+import { useMultiplayer } from '../../providers/multiplayer-provider';
 import { ConnectionStatusIndicator } from './connection-status-indicator';
 
 export function HostWaitingRoomScreen() {

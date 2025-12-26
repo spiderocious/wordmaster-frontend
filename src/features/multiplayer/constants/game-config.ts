@@ -53,6 +53,8 @@ export const AVAILABLE_LETTERS = [
   "Z",
 ] as const;
 
+export const MINIMUM_CATEGORIES = 3;
+
 export const DEFAULT_EXCLUDED_LETTERS = ["Q", "X", "Z"];
 
 export function getAvatarUrl(username: string): string {

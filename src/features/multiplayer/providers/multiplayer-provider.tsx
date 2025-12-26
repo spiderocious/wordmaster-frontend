@@ -11,6 +11,7 @@ import {
   Room,
   Player,
   GameConfig,
+  ChatMessage,
   WSMessageType,
   RoomCreatePayload,
   RoomJoinPayload,
@@ -29,8 +30,10 @@ import {
   ConfigUpdatePayload,
   GameEndPayload,
   ConfigUpdatedBroadcast,
+  ChatMessagePayload,
   ErrorResponse,
 } from '../types/multiplayer-types';
+import { MAX_ROUNDS_COUNT, MIN_ROUNDS_COUNT, MINIMUM_CATEGORIES } from '../constants/game-config';
 
 interface MultiplayerContextValue {
   // Room state
@@ -45,6 +48,7 @@ interface MultiplayerContextValue {
   startGame: () => void;
   updateGameConfig: (config: GameConfig) => void;
   endGame: () => void;
+  sendChatMessage: (message: string) => void;
 
   // Loading states
   isCreatingRoom: boolean;
@@ -53,6 +57,9 @@ interface MultiplayerContextValue {
   // Error state
   error: string | null;
   clearError: () => void;
+
+  // Chat
+  messages: ChatMessage[];
 }
 
 const MultiplayerContext = createContext<MultiplayerContextValue | null>(null);
@@ -77,6 +84,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const currentPlayer = room?.players.find(p => p.username === username) || null;
   const isHost = currentPlayer?.role === 'host';
@@ -130,9 +138,22 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       return;
     }
 
+    if (room.config.roundsCount < MIN_ROUNDS_COUNT || room.config.roundsCount > MAX_ROUNDS_COUNT) {
+      setError(`Rounds count must be between ${MIN_ROUNDS_COUNT} and ${MAX_ROUNDS_COUNT}`);
+      return;
+    }
+
+    if (room.config.supportedCategories.length < MINIMUM_CATEGORIES) {
+      setError(`Select at least ${MINIMUM_CATEGORIES} categories to start`);
+      return;
+    }
+
+    console.log(room.config);
+
     const payload: GameStartPayload = {
       roomId: room.roomId,
       username,
+      config: room.config,
     };
 
     sendMessage(WSMessageType.GAME_START, payload);
@@ -172,6 +193,31 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
     sendMessage(WSMessageType.GAME_END, payload);
   }, [isHost, room, username, sendMessage]);
+
+  // Send chat message
+  const sendChatMessage = useCallback((message: string) => {
+    if (!room) {
+      setError('Not in a room');
+      return;
+    }
+
+    if (!message.trim()) {
+      return; // Don't send empty messages
+    }
+
+    if (message.length > 500) {
+      setError('Message too long (max 500 characters)');
+      return;
+    }
+
+    const payload: ChatMessagePayload = {
+      roomId: room.roomId,
+      username,
+      message: message.trim(),
+    };
+
+    sendMessage(WSMessageType.CHAT_MESSAGE, payload);
+  }, [room, username, sendMessage]);
 
   // Set up event listeners
   useEffect(() => {
@@ -373,6 +419,12 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       });
     });
 
+    // Chat message broadcast - server sends 'chat:message'
+    socket.on(WSMessageType.CHAT_MESSAGE, (data: ChatMessage) => {
+      console.log('[Multiplayer] Chat message received:', data);
+      setMessages(prev => [...prev, data]);
+    });
+
     // Error handling
     socket.on(WSMessageType.ERROR, (errorResponse: ErrorResponse) => {
       console.error('[Multiplayer] Error:', errorResponse);
@@ -394,6 +446,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       socket.off(WSMessageType.GAME_FINISHED);
       socket.off(WSMessageType.GAME_ENDED);
       socket.off(WSMessageType.CONFIG_UPDATED);
+      socket.off(WSMessageType.CHAT_MESSAGE);
       socket.off(WSMessageType.ERROR);
     };
   }, [socket]);
@@ -408,10 +461,12 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     startGame,
     updateGameConfig,
     endGame,
+    sendChatMessage,
     isCreatingRoom,
     isJoiningRoom,
     error,
     clearError,
+    messages,
   };
 
   return (

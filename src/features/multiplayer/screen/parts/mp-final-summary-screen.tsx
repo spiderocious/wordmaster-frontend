@@ -5,20 +5,23 @@
  * Matches design exactly from image
  */
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { PageTransition } from '@shared/ui/components/page-transition';
-import { useMultiplayer } from '../../providers/multiplayer-provider';
-import { useWebSocket } from '../../providers/websocket-provider';
-import { soundService } from '@shared/services/sound-service';
-import { ROUTES } from '@shared/constants/routes';
-import { FaTrophy, FaBolt, FaCheckCircle, FaShare, FaRedo } from '@icons';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { PageTransition } from "@shared/ui/components/page-transition";
+import { useMultiplayer } from "../../providers/multiplayer-provider";
+import { useWebSocket } from "../../providers/websocket-provider";
+import { soundService } from "@shared/services/sound-service";
+import {
+  FaTrophy,
+  FaBolt,
+  FaCheckCircle,
+  FaStopCircle,
+} from "@icons";
 import {
   WSMessageType,
   GameSummaryPayload,
   GameSummarySuccessResponse,
-} from '../../types/multiplayer-types';
+} from "../../types/multiplayer-types";
 
 interface GameSummaryData {
   winner: {
@@ -52,8 +55,7 @@ interface GameSummaryData {
 }
 
 export function MPFinalSummaryScreen() {
-  const navigate = useNavigate();
-  const { room, currentPlayer, leaveRoom } = useMultiplayer();
+  const { room, currentPlayer, endGame, isHost } = useMultiplayer();
   const { socket, sendMessage } = useWebSocket();
   const [isLoading, setIsLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<GameSummaryData | null>(null);
@@ -71,22 +73,29 @@ export function MPFinalSummaryScreen() {
       username: currentPlayer.username,
     };
 
-    console.log('[MPFinalSummary] Requesting game summary:', payload);
+    console.log("[MPFinalSummary] Requesting game summary:", payload);
     sendMessage(WSMessageType.GAME_SUMMARY, payload);
 
     const handleGameSummary = (response: GameSummarySuccessResponse) => {
-      console.log('[MPFinalSummary] Received summary:', response);
+      console.log("[MPFinalSummary] Received summary:", response);
 
       if (!response.success) return;
 
       const { data } = response;
-      const currentPlayerData = data.players.find(p => p.username === currentPlayer.username);
+      const currentPlayerData = data.players.find(
+        (p) => p.username === currentPlayer.username
+      );
 
       // Build leaderboard sorted by total score
-      const sortedPlayers = [...data.players].sort((a, b) => b.totalScore - a.totalScore);
+      const sortedPlayers = [...data.players].sort(
+        (a, b) => b.totalScore - a.totalScore
+      );
       const leaderboard = sortedPlayers.map((player, index) => ({
         rank: index + 1,
-        username: player.username === currentPlayer.username ? `You (${player.username})` : player.username,
+        username:
+          player.username === currentPlayer.username
+            ? `You (${player.username})`
+            : player.username,
         totalWords: player.correctAnswers,
         accuracy: Math.round(player.accuracy * 100),
         score: player.totalScore,
@@ -97,9 +106,9 @@ export function MPFinalSummaryScreen() {
       // Game stats
       const gameStats = {
         fastestAnswer: {
-          time: `${data.gameStats.fastestAnswer.time.toFixed(1)}s`,
-          category: data.gameStats.fastestAnswer.category,
-          player: data.gameStats.fastestAnswer.username,
+          time: data.gameStats.fastestAnswer ? `${data.gameStats.fastestAnswer?.time?.toFixed(1)}s` : data.gameStats.fastestAnswer,
+          category: data.gameStats.fastestAnswer?.category,
+          player: data.gameStats.fastestAnswer?.username,
         },
         hardestCategory: {
           name: data.gameStats.hardestCategory.name,
@@ -111,7 +120,10 @@ export function MPFinalSummaryScreen() {
       // Your stats
       const yourStats = {
         totalScore: currentPlayerData?.totalScore || 0,
-        correct: `${currentPlayerData?.correctAnswers || 0}/${(currentPlayerData?.correctAnswers || 0) + Math.floor((currentPlayerData?.correctAnswers || 0) / 0.85)}`,
+        correct: `${currentPlayerData?.correctAnswers || 0}/${
+          (currentPlayerData?.correctAnswers || 0) +
+          Math.floor((currentPlayerData?.correctAnswers || 0) / 0.85)
+        }`,
         accuracy: `${Math.round((currentPlayerData?.accuracy || 0) * 100)}%`,
         longestStreak: currentPlayerData?.longestStreak || 0,
         avgTime: `${currentPlayerData?.averageTime.toFixed(1)}s`,
@@ -121,8 +133,13 @@ export function MPFinalSummaryScreen() {
       const winner = {
         username: data.winner.username,
         score: data.winner.score,
-        accuracy: Math.round((data.players.find(p => p.username === data.winner.username)?.accuracy || 0) * 100),
-        streak: data.players.find(p => p.username === data.winner.username)?.longestStreak || 0,
+        accuracy: Math.round(
+          (data.players.find((p) => p.username === data.winner.username)
+            ?.accuracy || 0) * 100
+        ),
+        streak:
+          data.players.find((p) => p.username === data.winner.username)
+            ?.longestStreak || 0,
         avatar: data.winner.avatar,
       };
 
@@ -143,28 +160,6 @@ export function MPFinalSummaryScreen() {
     };
   }, [room, currentPlayer, socket, sendMessage]);
 
-  function handlePlayAgain() {
-    soundService.playButtonClick();
-    leaveRoom();
-    navigate(ROUTES.multiplayer.mode.absPath);
-  }
-
-  function handleBackToHome() {
-    soundService.playButtonClick();
-    leaveRoom();
-    navigate('/');
-  }
-
-  function handleShare() {
-    if (!summaryData) return;
-
-    const shareText = `I scored ${summaryData.yourStats.totalScore} points in WordShot Multiplayer! 🎉`;
-    if (navigator.share) {
-      navigator.share({ title: 'WordShot Score', text: shareText });
-    } else {
-      navigator.clipboard.writeText(shareText);
-    }
-  }
 
   if (isLoading || !summaryData) {
     return (
@@ -172,7 +167,7 @@ export function MPFinalSummaryScreen() {
         <div className="h-screen w-full bg-gray-50 flex items-center justify-center">
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"
           />
         </div>
@@ -218,7 +213,11 @@ export function MPFinalSummaryScreen() {
                 <div className="relative">
                   <div className="w-32 h-32 rounded-full overflow-hidden bg-white border-4 border-yellow-400 shadow-lg">
                     {summaryData.winner.avatar ? (
-                      <img src={summaryData.winner.avatar} alt={summaryData.winner.username} className="w-full h-full" />
+                      <img
+                        src={summaryData.winner.avatar}
+                        alt={summaryData.winner.username}
+                        className="w-full h-full"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-6xl text-yellow-600 font-black">
                         🏆
@@ -231,29 +230,43 @@ export function MPFinalSummaryScreen() {
                     </div>
                   </div>
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-yellow-400 px-3 py-1 rounded-full shadow-lg">
-                    <span className="text-xs font-black text-yellow-900 uppercase">Champion</span>
+                    <span className="text-xs font-black text-yellow-900 uppercase">
+                      Champion
+                    </span>
                   </div>
                 </div>
 
                 {/* Winner info */}
                 <div className="flex-1">
-                  <h2 className="text-4xl font-black text-gray-900 mb-2">{summaryData.winner.username}</h2>
+                  <h2 className="text-4xl font-black text-gray-900 mb-2">
+                    {summaryData.winner.username}
+                  </h2>
                   <div className="flex items-center gap-4 mb-4">
                     <div className="bg-white rounded-xl px-4 py-2">
-                      <span className="text-3xl font-black text-blue-600">{summaryData.winner.score}</span>
-                      <span className="text-sm font-bold text-gray-500 ml-1">PTS</span>
+                      <span className="text-3xl font-black text-blue-600">
+                        {summaryData.winner.score}
+                      </span>
+                      <span className="text-sm font-bold text-gray-500 ml-1">
+                        PTS
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2">
                       <FaCheckCircle className="text-green-500" />
-                      <span className="text-lg font-bold text-gray-900">{summaryData.winner.accuracy}% Accuracy</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {summaryData.winner.accuracy}% Accuracy
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2">
                       <FaBolt className="text-orange-500" />
-                      <span className="text-lg font-bold text-gray-900">{summaryData.winner.streak} Streak</span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {summaryData.winner.streak} Streak
+                      </span>
                     </div>
                   </div>
                   <div className="bg-yellow-400 px-4 py-2 rounded-xl inline-block">
-                    <span className="text-yellow-900 font-bold">🎉 +500 XP Reward</span>
+                    <span className="text-yellow-900 font-bold">
+                      🎉 +500 XP Reward
+                    </span>
                   </div>
                 </div>
               </div>
@@ -271,7 +284,10 @@ export function MPFinalSummaryScreen() {
                   <FaTrophy className="text-yellow-500" />
                   Leaderboard
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">Round {room?.config.roundsCount || 5}/{room?.config.roundsCount || 5} Complete</p>
+                <p className="text-sm text-gray-500 mb-4">
+                  Round {room?.config.roundsCount || 5}/
+                  {room?.config.roundsCount || 5} Complete
+                </p>
 
                 <div className="space-y-3">
                   {summaryData.leaderboard.map((player, index) => (
@@ -282,27 +298,33 @@ export function MPFinalSummaryScreen() {
                       transition={{ delay: 0.3 + index * 0.1 }}
                       className={`rounded-xl p-4 flex items-center gap-4 ${
                         player.isYou
-                          ? 'bg-blue-100 border-2 border-blue-500'
-                          : 'bg-gray-50'
+                          ? "bg-blue-100 border-2 border-blue-500"
+                          : "bg-gray-50"
                       }`}
                     >
                       {/* Rank */}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg ${
-                        player.rank === 1
-                          ? 'bg-yellow-400 text-yellow-900'
-                          : player.rank === 2
-                          ? 'bg-gray-300 text-gray-700'
-                          : player.rank === 3
-                          ? 'bg-orange-300 text-orange-900'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}>
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-lg ${
+                          player.rank === 1
+                            ? "bg-yellow-400 text-yellow-900"
+                            : player.rank === 2
+                            ? "bg-gray-300 text-gray-700"
+                            : player.rank === 3
+                            ? "bg-orange-300 text-orange-900"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
                         {player.rank}
                       </div>
 
                       {/* Avatar */}
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
                         {player.avatar ? (
-                          <img src={player.avatar} alt={player.username} className="w-full h-full" />
+                          <img
+                            src={player.avatar}
+                            alt={player.username}
+                            className="w-full h-full"
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold">
                             {player.username[0]}
@@ -312,13 +334,19 @@ export function MPFinalSummaryScreen() {
 
                       {/* Info */}
                       <div className="flex-1">
-                        <h4 className="font-bold text-gray-900">{player.username}</h4>
-                        <p className="text-xs text-gray-500">{player.totalWords} words • {player.accuracy}% acc</p>
+                        <h4 className="font-bold text-gray-900">
+                          {player.username}
+                        </h4>
+                        <p className="text-xs text-gray-500">
+                          {player.totalWords} words • {player.accuracy}% acc
+                        </p>
                       </div>
 
                       {/* Score */}
                       <div className="text-right">
-                        <p className="text-2xl font-black text-gray-900">{player.score.toLocaleString()}</p>
+                        <p className="text-2xl font-black text-gray-900">
+                          {player.score.toLocaleString()}
+                        </p>
                       </div>
                     </motion.div>
                   ))}
@@ -333,31 +361,56 @@ export function MPFinalSummaryScreen() {
                 className="space-y-6"
               >
                 <div className="bg-white rounded-2xl p-6 shadow-md">
-                  <h3 className="text-lg font-black text-gray-900 mb-4">📊 Game Stats</h3>
+                  <h3 className="text-lg font-black text-gray-900 mb-4">
+                    📊 Game Stats
+                  </h3>
 
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-1">Fastest Answer</p>
-                      <p className="font-bold text-gray-900">{summaryData.gameStats.fastestAnswer.time}</p>
-                      <p className="text-xs text-blue-600">{summaryData.gameStats.fastestAnswer.player}</p>
-                    </div>
+                    {summaryData.gameStats.fastestAnswer?.time && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase mb-1">
+                          Fastest Answer
+                        </p>
+                        <p className="font-bold text-gray-900">
+                          {summaryData.gameStats.fastestAnswer.time}
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          {summaryData.gameStats.fastestAnswer.player}
+                        </p>
+                      </div>
+                    )}
+
+                    {summaryData.gameStats.hardestCategory && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase mb-1">
+                          Hardest Category
+                        </p>
+                        <p className="font-bold text-gray-900 uppercase">
+                          {summaryData.gameStats.hardestCategory.name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Only {summaryData.gameStats.hardestCategory.accuracy}%
+                          correct answers
+                        </p>
+                      </div>
+                    )}
 
                     <div>
-                      <p className="text-xs text-gray-500 uppercase mb-1">Hardest Category</p>
-                      <p className="font-bold text-gray-900">{summaryData.gameStats.hardestCategory.name}</p>
-                      <p className="text-xs text-gray-600">Only {summaryData.gameStats.hardestCategory.accuracy}% correct answers</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase mb-1">Total Words</p>
-                      <p className="text-3xl font-black text-gray-900">{summaryData.gameStats.totalWords}</p>
+                      <p className="text-xs text-gray-500 uppercase mb-1">
+                        Total Words
+                      </p>
+                      <p className="text-3xl font-black text-gray-900">
+                        {summaryData.gameStats.totalWords}
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Achievements */}
                 <div className="bg-white rounded-2xl p-6 shadow-md">
-                  <h3 className="text-lg font-black text-gray-900 mb-4">🏆 Achievements</h3>
+                  <h3 className="text-lg font-black text-gray-900 mb-4">
+                    🏆 Achievements
+                  </h3>
                   <div className="flex gap-3">
                     <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center">
                       <span className="text-3xl">⚡</span>
@@ -370,40 +423,33 @@ export function MPFinalSummaryScreen() {
                     </div>
                   </div>
                   <div className="mt-3 space-y-1">
-                    <p className="text-xs font-semibold text-purple-600">⚡ Speed Demon</p>
-                    <p className="text-xs font-semibold text-blue-600">🎯 Word Master</p>
+                    <p className="text-xs font-semibold text-purple-600">
+                      ⚡ Speed Demon
+                    </p>
+                    <p className="text-xs font-semibold text-blue-600">
+                      🎯 Word Master
+                    </p>
                   </div>
                 </div>
               </motion.div>
             </div>
 
-            {/* Your detailed stats section can go here similar to single player */}
-          </div>
-        </div>
+            {isHost && (
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1 }}
+                onClick={() => endGame()}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-lg py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <FaStopCircle />
+                <span>End Game and Restart</span>
+              </motion.button>
+            )}
 
-        {/* Footer Actions */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-20">
-          <div className="max-w-4xl mx-auto flex items-center gap-3">
-            <button
-              onClick={handleBackToHome}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-gray-700 transition-colors"
-            >
-              Back to Home
-            </button>
-            <button
-              onClick={handleShare}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold text-gray-700 transition-colors flex items-center gap-2"
-            >
-              <FaShare />
-              Share
-            </button>
-            <button
-              onClick={handlePlayAgain}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
-            >
-              <FaRedo />
-              Play Again
-            </button>
+            {/* Your detailed stats section can go here similar to single player */}
           </div>
         </div>
       </div>

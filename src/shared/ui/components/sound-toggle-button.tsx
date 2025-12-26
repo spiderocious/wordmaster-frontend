@@ -36,7 +36,7 @@ export function SoundToggleButton() {
       animate={{ scale: 1 }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-colors"
+      className="fixed bottom-32 right-4 z-50 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-colors"
       aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
       title={isMuted ? 'Unmute sound' : 'Mute sound'}
     >

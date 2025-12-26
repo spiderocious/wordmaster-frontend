@@ -15,12 +15,14 @@ import { soundService } from '@shared/services/sound-service';
 import { ROUTES } from '@shared/constants/routes';
 import { MIN_PLAYERS } from '../../constants/game-config';
 import { ConnectionStatusIndicator } from './connection-status-indicator';
+import { GameConfigEditor } from './game-config-editor';
 
 export function WaitingRoomScreen() {
   const navigate = useNavigate();
   const { room, isHost, startGame, leaveRoom, error } = useMultiplayer();
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
   const [copyLinkSuccess, setCopyLinkSuccess] = useState(false);
+  const [isConfigEditorOpen, setIsConfigEditorOpen] = useState(false);
   console.log(ROUTES.multiplayer);
   const playerCount = room?.players.length || 0;
   const canStartGame = isHost && playerCount >= MIN_PLAYERS;

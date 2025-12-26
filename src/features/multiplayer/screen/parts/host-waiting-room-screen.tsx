@@ -43,11 +43,7 @@ export function HostWaitingRoomScreen() {
       createRoom({
         username,
         avatar: getAvatarUrl(username),
-        config: {
-          roundsCount: DEFAULT_ROUNDS_COUNT,
-          supportedCategories: [...AVAILABLE_CATEGORIES],
-          excludedLetters: DEFAULT_EXCLUDED_LETTERS,
-        },
+        // Config removed - server uses defaults. Use config:update to change settings.
       });
     }
   }, [username, room, isCreatingRoom, createRoom, navigate]);

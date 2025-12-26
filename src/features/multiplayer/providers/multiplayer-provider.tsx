@@ -25,6 +25,10 @@ import {
   RoundEndedBroadcast,
   AnswerSubmittedBroadcast,
   GameFinishedBroadcast,
+  GameEndedBroadcast,
+  ConfigUpdatePayload,
+  GameEndPayload,
+  ConfigUpdatedBroadcast,
   ErrorResponse,
 } from '../types/multiplayer-types';
 
@@ -40,6 +44,7 @@ interface MultiplayerContextValue {
   leaveRoom: () => void;
   startGame: () => void;
   updateGameConfig: (config: GameConfig) => void;
+  endGame: () => void;
 
   // Loading states
   isCreatingRoom: boolean;
@@ -139,18 +144,34 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
   // Update game config (host only)
   const updateGameConfig = useCallback((config: GameConfig) => {
-    if (!isHost || !room) return;
+    if (!isHost || !room) {
+      setError('Only host can update configuration');
+      return;
+    }
 
-    setRoom(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        config,
-      };
-    });
+    const payload: ConfigUpdatePayload = {
+      roomId: room.roomId,
+      username,
+      config,
+    };
 
-    // TODO: Emit config update to WebSocket if needed
-  }, [isHost, room]);
+    sendMessage(WSMessageType.CONFIG_UPDATE, payload);
+  }, [isHost, room, username, sendMessage]);
+
+  // End game (host only)
+  const endGame = useCallback(() => {
+    if (!isHost || !room) {
+      setError('Only host can end the game');
+      return;
+    }
+
+    const payload: GameEndPayload = {
+      roomId: room.roomId,
+      username,
+    };
+
+    sendMessage(WSMessageType.GAME_END, payload);
+  }, [isHost, room, username, sendMessage]);
 
   // Set up event listeners
   useEffect(() => {
@@ -280,7 +301,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
         return {
           ...prev,
-          phase: data.phase,
+          phase: 'round_end', // Always set to round_end when round ends
         };
       });
     });
@@ -288,8 +309,18 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     // Answer submitted broadcast
     socket.on(WSMessageType.ANSWER_SUBMITTED, (data: AnswerSubmittedBroadcast) => {
       console.log('[Multiplayer] Answer submitted:', data);
-      // This is used to update UI showing how many players have submitted
-      // The answering screen will listen to this via the provider
+
+      // Check if all players have submitted - transition to round_end CLIENT-SIDE
+      if (data.allSubmitted) {
+        console.log('[Multiplayer] All players submitted! Transitioning to round_end');
+        setRoom(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            phase: 'round_end',
+          };
+        });
+      }
     });
 
     // Game finished broadcast
@@ -301,7 +332,43 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
         return {
           ...prev,
-          phase: data.phase,
+          phase: 'finished', // Always set to finished when game ends
+        };
+      });
+    });
+
+    // Game ended broadcast (host ended game early)
+    socket.on(WSMessageType.GAME_ENDED, (data: GameEndedBroadcast) => {
+      console.log('[Multiplayer] Game ended by host:', data);
+
+      // Reset room to waiting phase
+      setRoom(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          phase: 'waiting',
+          currentRound: undefined,
+          totalRounds: undefined,
+          roundData: undefined,
+          // Keep players in room, just reset game state
+          players: prev.players.map(p => ({
+            ...p,
+            currentScore: 0,
+            isReady: false,
+          })),
+        };
+      });
+    });
+
+    // Config updated broadcast (from host)
+    socket.on(WSMessageType.CONFIG_UPDATED, (data: ConfigUpdatedBroadcast) => {
+      console.log('[Multiplayer] Config updated:', data);
+
+      setRoom(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          config: data.config,
         };
       });
     });
@@ -325,6 +392,8 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       socket.off(WSMessageType.ROUND_ENDED);
       socket.off(WSMessageType.ANSWER_SUBMITTED);
       socket.off(WSMessageType.GAME_FINISHED);
+      socket.off(WSMessageType.GAME_ENDED);
+      socket.off(WSMessageType.CONFIG_UPDATED);
       socket.off(WSMessageType.ERROR);
     };
   }, [socket]);
@@ -338,6 +407,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     leaveRoom,
     startGame,
     updateGameConfig,
+    endGame,
     isCreatingRoom,
     isJoiningRoom,
     error,

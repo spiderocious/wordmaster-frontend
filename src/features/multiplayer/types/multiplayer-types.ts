@@ -45,6 +45,14 @@ export const WSMessageType = {
   GAME_START_SUCCESS: 'game:start:success',
   GAME_STARTED: 'game:started',
   GAME_FINISHED: 'game:finished',
+  GAME_END: 'game:end',
+  GAME_END_SUCCESS: 'game:end:success',
+  GAME_ENDED: 'game:ended',
+
+  // Config events
+  CONFIG_UPDATE: 'config:update',
+  CONFIG_UPDATE_SUCCESS: 'config:update:success',
+  CONFIG_UPDATED: 'config:updated',
 
   // Round events
   ROUND_RESULTS: 'round:results',
@@ -131,7 +139,7 @@ export interface Room {
 export interface RoomCreatePayload {
   username: string;
   avatar: string;
-  config: GameConfig;
+  // config removed - use config:update instead
 }
 
 export interface RoomJoinPayload {
@@ -146,6 +154,18 @@ export interface RoomLeavePayload {
 }
 
 export interface GameStartPayload {
+  roomId: string;
+  username: string;
+  config?: GameConfig; // Optional - can set config at start time
+}
+
+export interface ConfigUpdatePayload {
+  roomId: string;
+  username: string;
+  config: GameConfig;
+}
+
+export interface GameEndPayload {
   roomId: string;
   username: string;
 }
@@ -238,6 +258,16 @@ export interface GameFinishedBroadcast {
     username: string;
     score: number;
   };
+  message: string;
+}
+
+export interface ConfigUpdatedBroadcast {
+  config: GameConfig;
+  message: string;
+}
+
+export interface GameEndedBroadcast {
+  endedBy: string;
   message: string;
 }
 

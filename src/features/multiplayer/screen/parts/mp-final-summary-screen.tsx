@@ -16,7 +16,6 @@ import {
   FaBolt,
   FaCheckCircle,
   FaStopCircle,
-  FaGift,
   FaChartBar,
   FaCrown,
 } from "@icons";

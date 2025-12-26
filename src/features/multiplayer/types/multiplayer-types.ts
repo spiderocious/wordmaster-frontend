@@ -44,6 +44,7 @@ export const WSMessageType = {
   GAME_START: 'game:start',
   GAME_START_SUCCESS: 'game:start:success',
   GAME_STARTED: 'game:started',
+  GAME_FINISHED: 'game:finished',
 
   // Round events
   ROUND_RESULTS: 'round:results',
@@ -101,6 +102,19 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export interface RoundCategory {
+  name: string;
+  displayName: string;
+  timeLimit: number;
+}
+
+export interface RoundData {
+  roundNumber: number;
+  letter: string;
+  categories: RoundCategory[];
+  startedAt: number;
+}
+
 export interface Room {
   roomId: string;
   joinCode: string;
@@ -111,6 +125,7 @@ export interface Room {
   chatMessages: ChatMessage[];
   currentRound?: number;
   totalRounds?: number;
+  roundData?: RoundData;  // Current round information from server
 }
 
 export interface RoomCreatePayload {
@@ -194,12 +209,9 @@ export interface PlayerLeftBroadcast {
 }
 
 export interface GameStartedBroadcast {
-  phase: GamePhaseType;
-  currentRound: number;
+  phase?: GamePhaseType;
+  round: RoundData;
   totalRounds: number;
-  letter: string;
-  categories: string[];
-  timeLimit: number;
 }
 
 export interface AnswerSubmittedBroadcast {
@@ -213,10 +225,91 @@ export interface RoundEndedBroadcast {
 }
 
 export interface RoundStartedBroadcast {
-  phase: GamePhaseType;
-  currentRound: number;
+  phase?: GamePhaseType;
+  round: RoundData;
+  roundNumber: number;
   totalRounds: number;
-  letter: string;
-  categories: string[];
-  timeLimit: number;
+}
+
+export interface GameFinishedBroadcast {
+  phase: GamePhaseType;
+  winner: {
+    userId: string;
+    username: string;
+    score: number;
+  };
+  message: string;
+}
+
+export interface RoundResultsSuccessResponse {
+  success: true;
+  data: {
+    roomId: string;
+    roundNumber: number;
+    letter: string;
+    categories: string[];
+    players: Array<{
+      username: string;
+      avatar: string;
+      answers: Array<{
+        category: string;
+        word: string;
+        valid: boolean;
+        score: number;
+        timeLeft: number;
+      }>;
+      roundScore: number;
+      totalScore: number;
+    }>;
+    timestamp: number;
+  };
+}
+
+export interface GameSummarySuccessResponse {
+  success: true;
+  data: {
+    roomId: string;
+    totalRounds: number;
+    winner: {
+      username: string;
+      avatar: string;
+      score: number;
+    };
+    players: Array<{
+      username: string;
+      avatar: string;
+      totalScore: number;
+      correctAnswers: number;
+      accuracy: number;
+      averageTime: number;
+      longestStreak: number;
+      categoryBreakdown: Array<{
+        category: string;
+        correct: number;
+        total: number;
+        accuracy: number;
+      }>;
+    }>;
+    rounds: Array<{
+      roundNumber: number;
+      letter: string;
+      leaderboard: Array<{
+        username: string;
+        roundScore: number;
+      }>;
+    }>;
+    gameStats: {
+      totalWords: number;
+      fastestAnswer: {
+        username: string;
+        time: number;
+        category: string;
+      };
+      hardestCategory: {
+        name: string;
+        accuracy: number;
+      };
+    };
+    timestamp: number;
+  };
 }

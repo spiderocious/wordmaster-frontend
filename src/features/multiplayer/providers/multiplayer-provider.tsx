@@ -5,10 +5,12 @@
  */
 
 import { createContext, useContext, ReactNode, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWebSocket } from './websocket-provider';
 import {
   Room,
   Player,
+  GameConfig,
   WSMessageType,
   RoomCreatePayload,
   RoomJoinPayload,
@@ -19,6 +21,10 @@ import {
   PlayerJoinedBroadcast,
   PlayerLeftBroadcast,
   GameStartedBroadcast,
+  RoundStartedBroadcast,
+  RoundEndedBroadcast,
+  AnswerSubmittedBroadcast,
+  GameFinishedBroadcast,
   ErrorResponse,
 } from '../types/multiplayer-types';
 
@@ -33,6 +39,7 @@ interface MultiplayerContextValue {
   joinRoom: (payload: RoomJoinPayload) => void;
   leaveRoom: () => void;
   startGame: () => void;
+  updateGameConfig: (config: GameConfig) => void;
 
   // Loading states
   isCreatingRoom: boolean;
@@ -59,6 +66,7 @@ interface MultiplayerProviderProps {
 }
 
 export function MultiplayerProvider({ children, username }: MultiplayerProviderProps) {
+  const navigate = useNavigate();
   const { socket, sendMessage, isConnected } = useWebSocket();
   const [room, setRoom] = useState<Room | null>(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
@@ -128,6 +136,21 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
   const clearError = useCallback(() => {
     setError(null);
   }, []);
+
+  // Update game config (host only)
+  const updateGameConfig = useCallback((config: GameConfig) => {
+    if (!isHost || !room) return;
+
+    setRoom(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        config,
+      };
+    });
+
+    // TODO: Emit config update to WebSocket if needed
+  }, [isHost, room]);
 
   // Set up event listeners
   useEffect(() => {
@@ -212,6 +235,45 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     // Game started broadcast
     socket.on(WSMessageType.GAME_STARTED, (data: GameStartedBroadcast) => {
       console.log('[Multiplayer] Game started:', data);
+      console.log('[Multiplayer] Phase from server:', data.phase);
+      console.log('[Multiplayer] Round data:', data.round);
+
+      setRoom(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          phase: 'playing', // Go directly to playing phase (server includes round data)
+          currentRound: data.round.roundNumber,
+          totalRounds: data.totalRounds,
+          roundData: data.round,
+        };
+      });
+
+      // Navigate to session screen
+      navigate('/multiplayer/session');
+    });
+
+    // Round started broadcast
+    socket.on(WSMessageType.ROUND_STARTED, (data: RoundStartedBroadcast) => {
+      console.log('[Multiplayer] Round started:', data);
+
+      setRoom(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          phase: 'playing', // Go directly to playing phase
+          currentRound: data.roundNumber,
+          totalRounds: data.totalRounds,
+          roundData: data.round,
+        };
+      });
+    });
+
+    // Round ended broadcast
+    socket.on(WSMessageType.ROUND_ENDED, (data: RoundEndedBroadcast) => {
+      console.log('[Multiplayer] Round ended:', data);
 
       setRoom(prev => {
         if (!prev) return prev;
@@ -219,8 +281,27 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
         return {
           ...prev,
           phase: data.phase,
-          currentRound: data.currentRound,
-          totalRounds: data.totalRounds,
+        };
+      });
+    });
+
+    // Answer submitted broadcast
+    socket.on(WSMessageType.ANSWER_SUBMITTED, (data: AnswerSubmittedBroadcast) => {
+      console.log('[Multiplayer] Answer submitted:', data);
+      // This is used to update UI showing how many players have submitted
+      // The answering screen will listen to this via the provider
+    });
+
+    // Game finished broadcast
+    socket.on(WSMessageType.GAME_FINISHED, (data: GameFinishedBroadcast) => {
+      console.log('[Multiplayer] Game finished:', data);
+
+      setRoom(prev => {
+        if (!prev) return prev;
+
+        return {
+          ...prev,
+          phase: data.phase,
         };
       });
     });
@@ -240,6 +321,10 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
       socket.off(WSMessageType.PLAYER_JOINED);
       socket.off(WSMessageType.PLAYER_LEFT);
       socket.off(WSMessageType.GAME_STARTED);
+      socket.off(WSMessageType.ROUND_STARTED);
+      socket.off(WSMessageType.ROUND_ENDED);
+      socket.off(WSMessageType.ANSWER_SUBMITTED);
+      socket.off(WSMessageType.GAME_FINISHED);
       socket.off(WSMessageType.ERROR);
     };
   }, [socket]);
@@ -252,6 +337,7 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     joinRoom,
     leaveRoom,
     startGame,
+    updateGameConfig,
     isCreatingRoom,
     isJoiningRoom,
     error,

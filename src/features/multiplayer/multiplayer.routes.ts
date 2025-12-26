@@ -38,6 +38,12 @@ const WaitingRoomScreen = lazy(() =>
   })),
 );
 
+const MultiplayerSessionScreen = lazy(() =>
+  import('./screen/multiplayer-session-screen').then((module) => ({
+    default: module.MultiplayerSessionScreen,
+  })),
+);
+
 export const multiplayerRoutes: RouteObject = {
   path: ROUTES.multiplayer.absPath,
   children: [
@@ -64,6 +70,10 @@ export const multiplayerRoutes: RouteObject = {
         {
           path: 'waiting',
           Component: WaitingRoomScreen,
+        },
+        {
+          path: 'session',
+          Component: MultiplayerSessionScreen,
         },
       ],
     },

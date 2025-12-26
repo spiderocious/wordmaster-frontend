@@ -18,7 +18,6 @@ import { ROUTES } from '@shared/constants/routes';
 import { getAvatarUrl } from '../../constants/game-config';
 
 export function JoinSetupScreen() {
-  console.log('join screen');
   const { code } = useParams<{ code?: string }>();
   const navigate = useNavigate();
   const { room, joinRoom, isJoiningRoom, error, clearError } = useMultiplayer();

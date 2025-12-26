@@ -14,8 +14,7 @@ import { UsernameModal } from "@shared/ui/components/username-modal";
 
 export function MultiplayerLayout() {
   const username = usernameService.getUsername();
-  const { showModal, checkAndPrompt, closeModal, saveUsername } =
-    useUsernameGuard();
+  const { closeModal, saveUsername } = useUsernameGuard();
 
   if (!username) {
 

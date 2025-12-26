@@ -111,35 +111,39 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     }
   }, [room, username, currentPlayer]);
 
-  // Auto-rejoin room on reconnection
+  // Rejoin room helper function
+  const attemptRejoinRoom = useCallback(() => {
+    const storedRoomData = sessionStorage.getItem(STORAGE_KEYS.ROOM_DATA);
+    const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
+
+    if (storedRoomData && storedUsername && isConnected && !room) {
+      try {
+        const roomData = JSON.parse(storedRoomData);
+
+        console.log('[Multiplayer] Rejoining room:', roomData.joinCode);
+
+        // Attempt to rejoin the room
+        const rejoinPayload: RoomJoinPayload = {
+          joinCode: roomData.joinCode,
+          username: storedUsername,
+          avatar: roomData.avatar,
+        };
+
+        setIsJoiningRoom(true);
+        sendMessage(WSMessageType.ROOM_JOIN, rejoinPayload);
+      } catch (err) {
+        console.error('[Multiplayer] Failed to parse stored room data:', err);
+        sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+        sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+      }
+    }
+  }, [isConnected, room, sendMessage]);
+
+  // Auto-rejoin room on WebSocket reconnection (for mobile background/resume)
   useEffect(() => {
     const handleReconnection = () => {
       console.log('[Multiplayer] WebSocket reconnected, attempting to rejoin room...');
-
-      const storedRoomData = sessionStorage.getItem(STORAGE_KEYS.ROOM_DATA);
-      const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
-
-      if (storedRoomData && storedUsername && isConnected && !room) {
-        try {
-          const roomData = JSON.parse(storedRoomData);
-
-          console.log('[Multiplayer] Rejoining room:', roomData.joinCode);
-
-          // Attempt to rejoin the room
-          const rejoinPayload: RoomJoinPayload = {
-            joinCode: roomData.joinCode,
-            username: storedUsername,
-            avatar: roomData.avatar,
-          };
-
-          setIsJoiningRoom(true);
-          sendMessage(WSMessageType.ROOM_JOIN, rejoinPayload);
-        } catch (err) {
-          console.error('[Multiplayer] Failed to parse stored room data:', err);
-          sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
-          sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
-        }
-      }
+      attemptRejoinRoom();
     };
 
     window.addEventListener('websocket:reconnected', handleReconnection);
@@ -147,7 +151,39 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
     return () => {
       window.removeEventListener('websocket:reconnected', handleReconnection);
     };
-  }, [isConnected, room, sendMessage]);
+  }, [attemptRejoinRoom]);
+
+  // Auto-rejoin room on page load/refresh (initial mount)
+  useEffect(() => {
+    // Only run once on mount when socket first connects
+    if (isConnected && !room) {
+      const storedRoomData = sessionStorage.getItem(STORAGE_KEYS.ROOM_DATA);
+      const storedUsername = sessionStorage.getItem(STORAGE_KEYS.USERNAME);
+
+      if (storedRoomData && storedUsername) {
+        try {
+          const roomData = JSON.parse(storedRoomData);
+
+          // Check if we should rejoin
+          // Only rejoin if we were in lobby (waiting phase)
+          // If game was in session, we'll still rejoin but server will handle state
+          if (roomData.phase === 'waiting') {
+            console.log('[Multiplayer] Page refresh detected, rejoining lobby...');
+            attemptRejoinRoom();
+          } else {
+            // Game was in progress - rejoin but expect to be redirected to lobby
+            console.log('[Multiplayer] Page refresh during game session detected, rejoining...');
+            console.log('[Multiplayer] Note: Will be redirected to lobby after rejoin');
+            attemptRejoinRoom();
+          }
+        } catch (err) {
+          console.error('[Multiplayer] Failed to parse stored room data on mount:', err);
+          sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);
+          sessionStorage.removeItem(STORAGE_KEYS.USERNAME);
+        }
+      }
+    }
+  }, [isConnected, room, attemptRejoinRoom]);
 
   // Room creation
   const createRoom = useCallback((payload: RoomCreatePayload) => {
@@ -300,6 +336,19 @@ export function MultiplayerProvider({ children, username }: MultiplayerProviderP
 
       if (response.success) {
         setRoom(response.data);
+
+        // Handle navigation after rejoin
+        // If rejoining during an active game session, redirect to lobby
+        if (response.data.phase === 'playing' || response.data.phase === 'finished') {
+          console.log('[Multiplayer] Rejoined during active/finished game, redirecting to lobby...');
+          // Navigate to waiting room (lobby)
+          const isHostUser = response.data.players.find(p => p.username === username)?.role === 'host';
+          if (isHostUser) {
+            navigate(`/multiplayer/host`);
+          } else {
+            navigate(`/multiplayer/join/${response.data.joinCode}`);
+          }
+        }
       }
     });
 

@@ -153,7 +153,7 @@ export function MultiplayerProvider({
         };
 
         setIsJoiningRoom(true);
-        sendMessage(WSMessageType.ROOM_JOIN, rejoinPayload);
+        sendMessage(WSMessageType.ROOM_REJOIN, rejoinPayload);
       } catch (err) {
         console.error("[Multiplayer] Failed to parse stored room data:", err);
         // sessionStorage.removeItem(STORAGE_KEYS.ROOM_DATA);

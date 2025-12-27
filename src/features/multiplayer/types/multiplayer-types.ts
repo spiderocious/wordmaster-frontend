@@ -34,6 +34,7 @@ export const WSMessageType = {
   ROOM_CREATE: 'room:create',
   ROOM_CREATED: 'room:created',
   ROOM_JOIN: 'room:join',
+  ROOM_REJOIN: 'game:rejoin',
   ROOM_JOINED: 'room:joined',
   ROOM_LEAVE: 'room:leave',
   ROOM_LEFT: 'room:left',

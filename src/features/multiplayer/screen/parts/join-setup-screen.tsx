@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { FaUserCircle, FaDoorOpen } from '@icons';
 import { TextInput } from '@ui/components';
 import { PageTransition } from '@shared/ui/components/page-transition';
-import { useMultiplayer } from '../../providers/multiplayer-provider';
+import { STORAGE_KEYS, useMultiplayer } from '../../providers/multiplayer-provider';
 import { usernameService } from '@shared/services/username-service';
 import { soundService } from '@shared/services/sound-service';
 import { ROUTES } from '@shared/constants/routes';

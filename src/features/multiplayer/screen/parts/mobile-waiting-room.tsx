@@ -67,6 +67,10 @@ export function MobileWaitingRoom({
   );
   const saveTimeoutRef = useRef<number | null>(null);
 
+
+  const { username } = useUsernameGuard();
+  const currentPlayer = room?.players?.find((player: any) => player?.username === username);
+
   // Sync settings with room config when it updates from server
   useEffect(() => {
     if (room?.config) {
@@ -173,8 +177,6 @@ export function MobileWaitingRoom({
     );
   }
 
-  const { username } = useUsernameGuard();
-  const currentPlayer = room.players?.find((player: any) => player?.username === username);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -233,7 +235,7 @@ export function MobileWaitingRoom({
                 : "text-gray-600"
             }`}
           >
-            Players ({playerCount}/{MAX_PLAYERS})
+            Players ({playerCount})
           </button>
           <button
             onClick={() => setActiveTab("settings")}

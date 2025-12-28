@@ -28,7 +28,6 @@ import {
   MAX_ROUNDS_COUNT,
   MIN_ROUNDS_COUNT,
 } from "../../constants/game-config";
-import { useMultiplayer } from "../../providers/multiplayer-provider";
 import { GameConfig } from "../../types/multiplayer-types";
 import { WaitingRoomProps } from "./waiting-room-screen";
 import { useUsernameGuard } from "../../../../shared/hooks/use-username-guard";
@@ -49,9 +48,9 @@ export function MobileWaitingRoom({
   messages,
   sendChatMessage,
   showConfigUpdate,
+  updateGameConfig,
   MAX_PLAYERS,
 }: WaitingRoomProps) {
-  const { updateGameConfig } = useMultiplayer();
   const [activeTab, setActiveTab] = useState<TabType>("players");
   const [chatInput, setChatInput] = useState("");
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -124,7 +123,7 @@ export function MobileWaitingRoom({
           excludedLetters,
         };
 
-        updateGameConfig(config);
+        if(updateGameConfig) updateGameConfig(config);
         soundService.playButtonClick();
       }, 2000);
     },

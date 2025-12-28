@@ -31,6 +31,7 @@ export interface WaitingRoomProps {
   sendChatMessage: (message: string) => void;
   MIN_PLAYERS: number;
   MAX_PLAYERS: number;
+  updateGameConfig?: (config: any) => void;
 }
 
 export function WaitingRoomScreen() {

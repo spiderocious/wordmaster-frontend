@@ -1,77 +1,32 @@
 /**
  * Multiplayer Demo Waiting Room Screen
  *
- * Shows waiting room with animated features and annotations
+ * Standalone version matching MobileWaitingRoom style - NO gradients, NO emojis
  */
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useMultiplayerDemoContext, MultiplayerDemoState } from '../../providers/multiplayer-demo-provider';
 import { soundService } from '@shared/services/sound-service';
-import { FaUsers, FaCopy, FaComments, FaCog, FaPlay, FaCrown, FaCheckCircle } from '@icons';
+import {
+  FaArrowLeft,
+  FaCheckCircle,
+  FaCopy,
+  FaCrown,
+  FaShare,
+  FaUserPlus,
+  FaGamepad,
+} from '@icons';
 
-interface Annotation {
-  id: string;
-  position: { x: string; y: string };
-  text: string;
-  icon: React.ReactNode;
-  delay: number;
-}
-
-const annotations: Annotation[] = [
-  {
-    id: 'room-code',
-    position: { x: '50%', y: '15%' },
-    text: 'Share room code instantly',
-    icon: <FaCopy className="text-blue-500" />,
-    delay: 1000,
-  },
-  {
-    id: 'players',
-    position: { x: '20%', y: '40%' },
-    text: 'See who joined',
-    icon: <FaUsers className="text-green-500" />,
-    delay: 2500,
-  },
-  {
-    id: 'settings',
-    position: { x: '50%', y: '60%' },
-    text: 'Customize game settings',
-    icon: <FaCog className="text-purple-500" />,
-    delay: 4000,
-  },
-  {
-    id: 'chat',
-    position: { x: '80%', y: '40%' },
-    text: 'Chat while waiting',
-    icon: <FaComments className="text-pink-500" />,
-    delay: 5500,
-  },
-];
+type TabType = 'players' | 'settings' | 'chat';
 
 export function MPDemoWaitingRoomScreen() {
-  const { setGameState, roomCode, players } = useMultiplayerDemoContext();
-  const [visibleAnnotations, setVisibleAnnotations] = useState<string[]>([]);
-  const [chatMessages, setChatMessages] = useState<Array<{ user: string; text: string }>>([]);
+  const { setGameState, roomCode, players, categories } = useMultiplayerDemoContext();
+  const [activeTab, setActiveTab] = useState<TabType>('players');
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     soundService.playSuccess();
-
-    // Show annotations progressively
-    annotations.forEach((annotation) => {
-      setTimeout(() => {
-        setVisibleAnnotations((prev) => [...prev, annotation.id]);
-      }, annotation.delay);
-    });
-
-    // Simulate chat messages
-    setTimeout(() => {
-      setChatMessages([{ user: 'Jordan', text: 'Ready to play!' }]);
-    }, 3000);
-
-    setTimeout(() => {
-      setChatMessages((prev) => [...prev, { user: 'Alex', text: "Let's do this! 🔥" }]);
-    }, 4500);
 
     const timer = setTimeout(() => {
       setGameState(MultiplayerDemoState.GAME_START);
@@ -80,156 +35,218 @@ export function MPDemoWaitingRoomScreen() {
     return () => clearTimeout(timer);
   }, [setGameState]);
 
+  const handleCopyCode = () => {
+    setCopySuccess(true);
+    soundService.playSuccess();
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
   return (
-    <div className="h-screen w-full bg-gray-50 flex items-center justify-center overflow-hidden relative">
-      {/* Annotations */}
-      <AnimatePresence>
-        {annotations.map((annotation) =>
-          visibleAnnotations.includes(annotation.id) ? (
-            <motion.div
-              key={annotation.id}
-              initial={{ opacity: 0, scale: 0, x: '-50%' }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="absolute bg-white rounded-2xl shadow-2xl p-4 border-2 border-blue-500 z-50 pointer-events-none"
-              style={{ left: annotation.position.x, top: annotation.position.y, transform: 'translateX(-50%)' }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{annotation.icon}</div>
-                <p className="font-black text-gray-900 text-sm whitespace-nowrap">{annotation.text}</p>
-              </div>
-              {/* Arrow pointing down */}
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-blue-500" />
-            </motion.div>
-          ) : null
-        )}
-      </AnimatePresence>
-
-      {/* Waiting Room UI */}
-      <div className="w-full max-w-4xl mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-2xl overflow-hidden"
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
-            <div className="text-center">
-              <p className="text-sm uppercase tracking-wide opacity-90 mb-1">Room Code</p>
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: 'spring' }}
-                className="text-4xl font-black tracking-widest"
-              >
-                {roomCode}
-              </motion.div>
-            </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <div className="bg-white px-4">
+        <div className="flex items-center justify-between mb-1 mt-3">
+          <button className="w-11 h-11 flex items-center justify-center">
+            <FaArrowLeft className="text-gray-700 text-xl" />
+          </button>
+          <div className="flex-1 text-center">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Room Code</p>
+            <p className="text-2xl font-black text-blue-600 tracking-widest">{roomCode}</p>
           </div>
+          <button className="w-11 h-11 flex items-center justify-center">
+            <FaShare className="text-blue-600 text-xl" />
+          </button>
+        </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-3 gap-6 p-6">
-            {/* Players Section */}
-            <div className="col-span-1">
-              <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-                <FaUsers className="text-blue-500" />
-                Players ({players.length}/8)
-              </h3>
-              <div className="space-y-3">
-                {players.map((player, index) => (
-                  <motion.div
-                    key={player.username}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + index * 0.3 }}
-                    className={`p-3 rounded-xl ${
-                      player.role === 'host'
-                        ? 'bg-yellow-50 border-2 border-yellow-400'
-                        : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
+        <div className="flex flex-row gap-2 mb-2">
+          <button
+            onClick={handleCopyCode}
+            className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <FaCopy className="text-sm" />
+            <span className="text-sm">{copySuccess ? 'Copied!' : 'Copy Code'}</span>
+          </button>
+
+          <button className="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <FaShare className="text-sm" />
+            <span className="text-sm">Copy Room Link</span>
+          </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex bg-gray-100 rounded-full p-1">
+          <button
+            onClick={() => setActiveTab('players')}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors ${
+              activeTab === 'players' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+            }`}
+          >
+            Players ({players.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors ${
+              activeTab === 'settings' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+            }`}
+          >
+            Settings
+          </button>
+          <button
+            onClick={() => setActiveTab('chat')}
+            className={`flex-1 py-2 px-4 rounded-full text-sm font-semibold transition-colors ${
+              activeTab === 'chat' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+            }`}
+          >
+            Chat
+          </button>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto pb-24">
+        {/* Players Tab */}
+        {activeTab === 'players' && (
+          <div className="p-4 space-y-3">
+            {players.map((player, index) => {
+              const isHostPlayer = player.role === 'host';
+
+              return (
+                <motion.div
+                  key={player.username}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`bg-white rounded-2xl p-4 shadow-sm ${
+                    isHostPlayer ? 'border-2 border-blue-500' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
                       <img
                         src={player.avatar}
                         alt={player.username}
-                        className="w-10 h-10 rounded-full"
+                        className="w-16 h-16 rounded-full"
                       />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-sm">{player.username}</p>
-                          {player.role === 'host' && (
-                            <FaCrown className="text-yellow-600 text-xs" />
-                          )}
+                      {isHostPlayer && (
+                        <div className="absolute -top-1 -left-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center">
+                          <FaCrown className="text-xs text-yellow-900" />
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-green-600">
-                          <FaCheckCircle />
-                          <span>Ready</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
 
-            {/* Settings Section */}
-            <div className="col-span-1">
-              <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-                <FaCog className="text-purple-500" />
-                Settings
-              </h3>
-              <div className="space-y-3">
-                <div className="bg-purple-50 p-3 rounded-xl border border-purple-200">
-                  <p className="text-xs text-gray-600 mb-1">Rounds</p>
-                  <p className="text-2xl font-black text-gray-900">1</p>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-xl border border-purple-200">
-                  <p className="text-xs text-gray-600 mb-1">Categories</p>
-                  <p className="text-lg font-bold text-gray-900">Animal, City</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-gray-900">{player.username}</h3>
+                        {isHostPlayer && (
+                          <span className="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded uppercase">
+                            HOST
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-green-600">Ready to start</p>
+                    </div>
+
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <FaCheckCircle className="text-green-600 text-xl" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* Empty slots */}
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={`empty-${i}`}
+                className="bg-white rounded-2xl p-4 border-2 border-dashed border-gray-300"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                    <FaUserPlus className="text-3xl text-gray-300" />
+                  </div>
+                  <p className="text-gray-400 italic">Waiting for player...</p>
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
+        )}
 
-            {/* Chat Section */}
-            <div className="col-span-1">
-              <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-                <FaComments className="text-pink-500" />
-                Chat
-              </h3>
-              <div className="bg-gray-50 rounded-xl p-3 h-40 overflow-y-auto space-y-2">
-                <AnimatePresence>
-                  {chatMessages.map((msg, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white p-2 rounded-lg shadow-sm"
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="p-4 space-y-6">
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Game Configuration</h3>
+
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Number of Rounds
+                </label>
+                <div className="flex-1 bg-gray-100 rounded-xl py-3 text-center">
+                  <p className="text-3xl font-black text-gray-900">1</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Categories ({categories.length} selected)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((category) => (
+                    <div
+                      key={category}
+                      className="px-3 py-2.5 rounded-xl font-semibold text-sm bg-blue-500 text-white shadow-md"
                     >
-                      <p className="text-xs font-bold text-blue-600">{msg.user}</p>
-                      <p className="text-sm text-gray-800">{msg.text}</p>
-                    </motion.div>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </div>
                   ))}
-                </AnimatePresence>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Start Button */}
-          <div className="px-6 pb-6">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 6, type: 'spring' }}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl py-4 text-center shadow-lg"
-            >
-              <div className="flex items-center justify-center gap-3">
-                <FaPlay className="text-2xl" />
-                <span className="text-xl font-black">Starting Game...</span>
+        {/* Chat Tab */}
+        {activeTab === 'chat' && (
+          <div className="p-4 space-y-4">
+            <div className="flex gap-2">
+              <div className="flex-1 flex flex-col items-start">
+                <span className="text-xs font-semibold text-gray-600 uppercase mb-1">
+                  {players[1].username}
+                </span>
+                <div className="px-4 py-2 rounded-2xl max-w-[85%] bg-white border border-gray-200">
+                  <p className="text-sm">Ready to play!</p>
+                </div>
               </div>
-            </motion.div>
+            </div>
+
+            <div className="flex gap-2 flex-row-reverse">
+              <div className="flex-1 flex flex-col items-end">
+                <span className="text-xs font-semibold text-gray-600 uppercase mb-1">You</span>
+                <div className="px-4 py-2 rounded-2xl max-w-[85%] bg-blue-500 text-white">
+                  <p className="text-sm">Let's do this!</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </motion.div>
+        )}
+      </div>
+
+      {/* Bottom Action Button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
+        {activeTab === 'players' ? (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 text-center">
+            <p className="text-blue-900 font-semibold">Waiting for host...</p>
+            <p className="text-blue-700 text-sm">The host will start the game when ready</p>
+          </div>
+        ) : (
+          <button
+            onClick={handleCopyCode}
+            className="w-full h-14 bg-white border-2 border-blue-500 text-blue-500 rounded-full font-semibold flex items-center justify-center gap-2"
+          >
+            <FaCopy />
+            {copySuccess ? 'Copied!' : 'Copy Room Code'}
+          </button>
+        )}
       </div>
     </div>
   );

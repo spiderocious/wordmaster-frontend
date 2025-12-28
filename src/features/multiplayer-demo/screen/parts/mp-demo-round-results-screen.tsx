@@ -1,7 +1,7 @@
 /**
  * Multiplayer Demo Round Results Screen
  *
- * Shows final scores and winner announcement
+ * Clean version matching actual game - NO gradients, NO emojis
  */
 
 import { useEffect } from 'react';
@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { useMultiplayerDemoContext, MultiplayerDemoState } from '../../providers/multiplayer-demo-provider';
 import { soundService } from '@shared/services/sound-service';
-import { FaTrophy, FaMedal } from 'react-icons/fa';
+import { FaTrophy, FaMedal, FaCheck, FaBolt } from '@icons';
 
 export function MPDemoRoundResultsScreen() {
   const { setGameState, players } = useMultiplayerDemoContext();
@@ -31,173 +31,104 @@ export function MPDemoRoundResultsScreen() {
   }, [setGameState]);
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-purple-600 via-pink-500 to-orange-500 flex items-center justify-center overflow-hidden relative">
+    <div className="h-screen w-full bg-gray-50 flex items-center justify-center overflow-hidden relative">
       <Confetti
         width={window.innerWidth}
         height={window.innerHeight}
-        numberOfPieces={400}
+        numberOfPieces={300}
         recycle={false}
-        gravity={0.3}
+        gravity={0.25}
+        colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']}
       />
 
       <div className="text-center z-10 px-4 max-w-5xl w-full">
         {/* Winner announcement */}
         <motion.div
-          initial={{ scale: 0, rotate: -180, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           transition={{
             type: 'spring',
             stiffness: 200,
             damping: 15,
-            duration: 1,
+            duration: 0.8,
           }}
-          className="mb-12"
+          className="mb-10"
         >
-          <motion.div
-            animate={{
-              y: [0, -20, 0],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            <FaTrophy className="text-8xl text-yellow-300 mx-auto mb-4 drop-shadow-2xl" />
-            <h1 className="text-6xl md:text-7xl font-black text-white mb-4 drop-shadow-2xl">
-              {winner.username} Wins!
-            </h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-2xl text-white/90 font-bold"
-            >
-              Victory by {winner.totalScore - sortedPlayers[1].totalScore} points!
-            </motion.p>
-          </motion.div>
+          <div className="inline-block bg-yellow-400 rounded-full p-6 mb-6">
+            <FaTrophy className="text-7xl text-yellow-900" />
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-gray-900 mb-3">
+            {winner.username} Wins!
+          </h1>
+          <p className="text-xl text-gray-600 font-semibold">
+            Victory by {winner.totalScore - sortedPlayers[1].totalScore} points
+          </p>
         </motion.div>
 
         {/* Players comparison */}
-        <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch mb-8">
+        <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch">
           {sortedPlayers.map((player, index) => {
             const isWinner = index === 0;
+            const medal = index === 0 ? '1st' : '2nd';
+            const medalColor = index === 0 ? 'bg-yellow-400 text-yellow-900' : 'bg-gray-400 text-gray-900';
 
             return (
               <motion.div
                 key={player.username}
-                initial={{ opacity: 0, scale: 0.8, y: 100 }}
+                initial={{ opacity: 0, scale: 0.8, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{
-                  delay: 0.8 + index * 0.2,
+                  delay: 0.6 + index * 0.2,
                   type: 'spring',
                   stiffness: 200,
                   damping: 15,
                 }}
-                className={`relative ${isWinner ? 'md:scale-110 z-10' : 'md:scale-95'}`}
+                className={`relative ${isWinner ? 'md:scale-105' : ''}`}
               >
-                <div
-                  className={`bg-white rounded-3xl shadow-2xl p-8 w-80 relative overflow-hidden ${
-                    isWinner ? 'border-4 border-yellow-400' : ''
-                  }`}
-                >
-                  {/* Rank badge */}
-                  <div className="absolute top-4 right-4">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ delay: 1.2 + index * 0.2, type: 'spring' }}
-                      className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black ${
-                        isWinner
-                          ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white'
-                          : 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-700'
-                      }`}
-                    >
-                      {index === 0 ? '🥇' : '🥈'}
-                    </motion.div>
+                <div className="bg-white rounded-2xl shadow-xl p-6 w-80 relative border-2 border-gray-200">
+                  {/* Medal badge */}
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className={`${medalColor} rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-4 border-white`}>
+                      <FaMedal className="text-xl" />
+                    </div>
                   </div>
 
                   {/* Player info */}
-                  <div className="flex flex-col items-center mb-6">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 1 + index * 0.2, type: 'spring', stiffness: 300 }}
-                      className="relative mb-4"
-                    >
-                      <img
-                        src={player.avatar}
-                        alt={player.username}
-                        className={`w-24 h-24 rounded-full ${
-                          isWinner ? 'border-4 border-yellow-400' : 'border-4 border-gray-300'
-                        }`}
-                      />
-                      {player.role === 'host' && (
-                        <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full w-8 h-8 flex items-center justify-center">
-                          👑
-                        </div>
-                      )}
-                    </motion.div>
+                  <div className="flex flex-col items-center mt-6 mb-6">
+                    <img
+                      src={player.avatar}
+                      alt={player.username}
+                      className="w-20 h-20 rounded-full border-4 border-blue-500 mb-3"
+                    />
+                    <h3 className="text-2xl font-black text-gray-900">{player.username}</h3>
+                    <p className="text-sm text-gray-500 uppercase tracking-wide">{medal} Place</p>
+                  </div>
 
-                    <h3 className="text-3xl font-black text-gray-800 mb-1">{player.username}</h3>
-                    <p className="text-sm text-gray-500 uppercase tracking-wide mb-4">
-                      {player.role === 'host' ? 'Host' : 'Player'}
-                    </p>
-
-                    {/* Total score */}
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 1.5 + index * 0.2, type: 'spring', stiffness: 300 }}
-                      className={`rounded-2xl p-4 w-full ${
-                        isWinner
-                          ? 'bg-gradient-to-br from-yellow-50 to-orange-50'
-                          : 'bg-gray-50'
-                      }`}
-                    >
-                      <p className="text-sm text-gray-500 uppercase tracking-wide mb-1">
-                        Total Score
-                      </p>
-                      <motion.div
-                        animate={isWinner ? { scale: [1, 1.1, 1] } : {}}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="flex items-baseline justify-center gap-2"
-                      >
-                        <span
-                          className={`text-5xl font-black ${
-                            isWinner
-                              ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {player.totalScore}
-                        </span>
-                        <span className="text-xl font-bold text-gray-500">PTS</span>
-                      </motion.div>
-                    </motion.div>
+                  {/* Total score */}
+                  <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200">
+                    <p className="text-sm text-gray-600 mb-1">Total Score</p>
+                    <p className="text-4xl font-black text-blue-600">{player.totalScore}</p>
                   </div>
 
                   {/* Category breakdown */}
                   <div className="space-y-2">
-                    {player.answers.map((answer, idx) => (
-                      <motion.div
-                        key={answer.category}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1.8 + index * 0.2 + idx * 0.1 }}
-                        className="flex justify-between items-center bg-purple-50 rounded-xl px-4 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <FaMedal className="text-purple-500" />
-                          <span className="font-bold text-gray-700 capitalize">
-                            {answer.category}
-                          </span>
+                    {player.answers.map((answer) => (
+                      <div key={answer.category} className="bg-gray-50 rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-bold text-gray-700 capitalize">{answer.category}</span>
+                          <div className="flex items-center gap-2">
+                            <FaCheck className="text-green-500 text-xs" />
+                            <span className="text-sm font-bold text-green-600">+{answer.score}</span>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-purple-600">{answer.word}</span>
-                          <span className="text-sm text-gray-500">+{answer.score}</span>
+                          <p className="text-xs text-gray-600 flex-1">"{answer.word}"</p>
+                          <div className="flex items-center gap-1">
+                            <FaBolt className="text-orange-500 text-xs" />
+                            <span className="text-xs text-orange-600">+{answer.speedBonus}</span>
+                          </div>
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -206,19 +137,14 @@ export function MPDemoRoundResultsScreen() {
           })}
         </div>
 
-        {/* Next round teaser */}
+        {/* Call to action */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.5 }}
-          className="text-white text-xl font-bold"
+          transition={{ delay: 1.2 }}
+          className="mt-8"
         >
-          <motion.p
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            Ready for your own battle?
-          </motion.p>
+          <p className="text-gray-600 font-semibold">Ready for your own battle?</p>
         </motion.div>
       </div>
     </div>

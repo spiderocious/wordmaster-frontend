@@ -104,7 +104,7 @@ export function MPDemoIntroScreen() {
           </div>
           <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-6 py-3 rounded-full border-2 border-white/30">
             <FaTrophy className="text-3xl" />
-            <span className="font-bold text-lg">Win Glory</span>
+            <span className="font-bold text-lg">Dominate</span>
           </div>
         </motion.div>
 

@@ -54,8 +54,8 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
       reconnection: true,
       reconnectionAttempts: Infinity, // Never give up trying
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000, // Max 10 seconds between attempts
-      timeout: 20000,
+      reconnectionDelayMax: 1000, // Max 1 second between attempts
+      timeout: 200000,
       autoConnect: true,
     });
 

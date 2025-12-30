@@ -15,7 +15,6 @@ import {
   FaCrown,
   FaShare,
   FaUserPlus,
-  FaGamepad,
 } from '@icons';
 
 type TabType = 'players' | 'settings' | 'chat';

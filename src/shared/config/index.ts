@@ -8,6 +8,7 @@ interface AppConfig {
   apiBaseUrl: string;
   isDevelopment: boolean;
   isProduction: boolean;
+  useNewLandingPage: boolean;
 }
 
 function getConfig(): AppConfig {
@@ -18,6 +19,7 @@ function getConfig(): AppConfig {
     apiBaseUrl,
     isDevelopment: mode === 'development',
     isProduction: mode === 'production',
+    useNewLandingPage: true
   };
 }
 

@@ -7,14 +7,22 @@ import { Button, Logo, Heading, Text } from '@ui/components';
 import { HeroIllustration } from './parts/hero-illustration';
 import { soundService } from '../../../shared/services/sound-service';
 import { useEffect } from 'react';
+import { config } from '@shared/config';
+import { LandingScreenV2 } from '@features/landing/screen/landing-screen-v2';
 
 /**
  * Entrypoint Screen
  *
  * Gamified landing page for WordShot - The Alphabet Category Game
  * Features animations, confetti effects, and exciting visual elements
+ *
+ * Feature-flagged: Shows new landing page if VITE_USE_NEW_LANDING_PAGE=true
  */
 export function EntrypointScreen() {
+  // Feature flag: Use new landing page if enabled
+  if (config.useNewLandingPage) {
+    return <LandingScreenV2 />;
+  }
   const navigate = useNavigate();
 
   useEffect(() => {
